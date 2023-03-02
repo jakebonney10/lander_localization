@@ -12,6 +12,9 @@ water column using a CTD-rosette (conductivity, temperature, and depth sensor). 
 propulsion, depends on buoyancy for operation, and is subject to environmental effects (namely ocean currents).
 Upon surfacing, the lander’s satellite beacons email GPS coordinates to topside operations.
 
+![Lander](/repository/lander.png?raw=true "Deep Autonomous Profiler (“Lander”) aboard R/V Atlantis.")
+
+
 ## Problem
 
 The lander operates fully autonomously, leaving the topside operators with deficient information regarding the
