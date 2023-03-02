@@ -3,6 +3,8 @@ Particle filter localization of a full ocean depth autonomous surveyor.
 
 ## Background
 
+<img align="right" width="40%" src="/lander.jpg">
+
 The Deep Autonomous Profiler (DAP, also known as ‘lander’) is a rigid body oceanographic instrument that
 surveys the entire water column by taking in-situ measurements. Deployment consists of dropping the lander off
 the side of a research vessel (R/V) and allowing it to free fall (with the help of 300lbs of weight) to the bottom
@@ -11,9 +13,6 @@ and floating upwards to the surface. During descent, resting at the bottom, and 
 water column using a CTD-rosette (conductivity, temperature, and depth sensor). The lander has no self-
 propulsion, depends on buoyancy for operation, and is subject to environmental effects (namely ocean currents).
 Upon surfacing, the lander’s satellite beacons email GPS coordinates to topside operations.
-
-![Lander](/repository/lander.png?raw=true "Deep Autonomous Profiler (“Lander”) aboard R/V Atlantis.")
-
 
 ## Problem
 
