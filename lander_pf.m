@@ -14,7 +14,7 @@ avg_descent_veloc = 0.5; % (m/s)
 descent_std_dev = 0.1; % (m/s)
 
 % Define time vector
-Tmax = 10000;
+Tmax = 1000;
 DeltaT = 0.2;
 
 % Define state vector
