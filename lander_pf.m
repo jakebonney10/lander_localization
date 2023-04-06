@@ -4,42 +4,61 @@
 % GOAL: Initialize particles for particle filter localization and perform 
 % motion update step for each particle.
 
-clc; clear all; 
+clc, clearvars, close all
 
-%%%%% PARAMETERS
+%%%%% USER INPUTS
+ocean_depth = 20;      % approximate ocean depth known before deployment (m) 
+num_particles = 10;     % num of particles to use in estimation
+
+
+%%%%% IMMUTABLE PARAMETERS
 
 % Time
-Tmax = 1000;     % in seconds, maximum time to run the simulation
-DeltaT = 0.2;       % in seconds, time step as we move through the simulation
+p.t_max = 1000;         % in seconds, maximum time to run the simulation
+p.delta_t = 0.2;        % in seconds, time step as we move through the simulation
 
 % Knowns
-sound_speed = 1500; % (m/s) constant for now, will need this for range measurement later
-ocean_depth = 100; % approximate ocean depth known before deployment (m) 
-total_bottom_time = 60; % estimated total bottom time in seconds
-avg_descent_veloc = 0.5; % descent velocity (m/s)
-avg_ascent_veloc = -0.5; % ascent velocity (m/s)
+p.sound_speed = 1500; % (m/s) constant for now, will need this for range measurement later
+p.ocean_depth = ocean_depth; % approximate ocean depth known before deployment (m) 
+p.total_bottom_time = 60; % estimated total bottom time in seconds
+p.avg_descent_veloc = 0.5; % descent velocity (m/s)
+p.avg_ascent_veloc = -0.5; % ascent velocity (m/s)
+p.num_particles = num_particles;
+
+% Uncertainties
+p.descent_std_dev = 0.1; % (m/s)
+p.position_std_dev = 0.1; % (m)
+p.velocity_std_dev = 0.01; % (m/s)
+
+%%%%% OTHER PARAMETERS
 
 % Initial State
 ship_x = 0; % Ship latitude at launch
 ship_y = 0; % Ship longitude at launch
-descent_std_dev = 0.1; % (m/s)
-position_std_dev = 1; % (m)
-velocity_std_dev = 0.1; % (m/s)
 
-% Define state vector
+
+%%%%% INITIALIZE PARTICLES
+
+%initial_x = ship_x + p.position_std_dev * randn(p.num_particles, 1);
+%initial_y = ship_y + p.position_std_dev * randn(p.num_particles, 1);
+%initial_z = 5 + p.position_std_dev * randn(p.num_particles, 1);
+%initial_u = p.velocity_std_dev * randn(p.num_particles, 1);
+%initial_v = p.velocity_std_dev * randn(p.num_particles, 1);
+%initial_w = p.avg_descent_veloc + p.descent_std_dev * randn(p.num_particles, 1);
+initial_x = ship_x + normrnd(0, p.position_std_dev, num_particles, 1);
+initial_y = ship_y + normrnd(0, p.position_std_dev, num_particles, 1);
+initial_z = 5 + normrnd(0, p.position_std_dev, num_particles, 1);
+initial_u = normrnd(0, p.velocity_std_dev, num_particles, 1);
+initial_v = p.velocity_std_dev * randn(p.num_particles, 1);
+initial_w = p.avg_descent_veloc + normrnd(0,p.descent_std_dev,num_particles,1);
+
+
+
+initial_mode = zeros(p.num_particles, 1); % descending, on bottom, ascending, on surface
+initial_bottom_time = zeros(p.num_particles, 1);
+
+% define State (hold all particles)
 state = struct('x', [], 'y', [], 'z', [], 'u', [], 'v', [], 'w', [], 'mode', [], 'bottom_time', []);
-
-% Initialize particles
-num_particles = 10;
-initial_x = ship_x + position_std_dev * randn(num_particles, 1);
-initial_y = ship_y + position_std_dev * randn(num_particles, 1);
-initial_z = 5 + position_std_dev * randn(num_particles, 1);
-initial_u = velocity_std_dev * randn(num_particles, 1);
-initial_v = velocity_std_dev * randn(num_particles, 1);
-initial_w = avg_descent_veloc + descent_std_dev * randn(num_particles, 1);
-initial_mode = zeros(num_particles, 1); % descending, on bottom, ascending, on surface
-initial_bottom_time = zeros(num_particles, 1);
-
 state.x = initial_x;
 state.y = initial_y;
 state.z = initial_z;
@@ -48,6 +67,7 @@ state.v = initial_v;
 state.w = initial_w;
 state.mode = initial_mode;
 state.bottom_time = initial_bottom_time;
+state.finished_particles = 0;
 
 % Plot initial particle state
 plot3(state.x,state.y,state.z,'b.')
@@ -55,52 +75,31 @@ set(gca, 'ZDir', 'reverse');
 axis equal
 hold on
 
-% Define motion model
-mode_probabilities = [0.5, 0.1, 0.1, 0.3]; % probabilities of mode transitions???
+disp('displaying particles')
+pause(5)
 
-for t=0:DeltaT:Tmax
 
-    % motion model update for each particle
-    for i=1:num_particles
+%%%%% RUN PARTICLE FILTER SIMULATION 
+disp('running particle filter')
+for t=0:p.delta_t:p.t_max
 
-        state.x(i) = state.x(i) + normrnd(0, position_std_dev);
-        state.y(i) = state.y(i) + normrnd(0, position_std_dev);
-        state.z(i) = state.z(i) + state.w(i)*DeltaT + normrnd(0, descent_std_dev);
-        state.u(i) = state.u(i) + normrnd(0, velocity_std_dev);
-        state.v(i) = state.v(i) + normrnd(0, velocity_std_dev);
-        
-        % Check mode state and set state.w
-        if state.mode(i) == 0 % descending
-            state.w(i) = avg_descent_veloc + normrnd(0, velocity_std_dev);
-        elseif state.mode(i) == 1 % on bottom
-            state.w(i) = 0;
-            state.bottom_time(i) = state.bottom_time(i) + DeltaT;
-        elseif state.mode(i) == 2 % ascending
-            state.w(i) = avg_ascent_veloc + normrnd(0, velocity_std_dev);
-        else % either on bottom or on surface
-            state.w(i) = 0; 
-        end
-        
-        % Check if on bottom
-        if state.z(i) >= ocean_depth % on bottom
-            state.mode(i) = 1; 
-        end
+    % motion update (update all states)
+    state = motion_update(state,p);
 
-        % Check if ascending
-        if state.bottom_time(i) >= total_bottom_time % ascending
-            state.mode(i) = 2;
-        end
+    % measurement update
 
-        % Check to see if on surface
-        if state.z(i) < 1 & state.bottom_time(i) >= total_bottom_time % on surface
-            state.mode(i) = 3; 
-        end
 
-    end
+    % cull and resample particles
 
-    plot3(state.x,state.y,state.z,'r.')
 
+    % visualize and pause
+    plot3(state.x,state.y,state.z,'r.'), hold off
     pause(0.01)
+
+    % kill sim for any reason
+    if state.finished_particles == p.num_particles
+        break
+    end
 
 end
 
@@ -109,4 +108,4 @@ disp('simulation ended!')
 final_particle_pose_x = mean(state.x);
 final_particle_pose_y = mean(state.y);
 final_particle_pose_z = mean(state.z);
-fprintf('The estimated position is x = %.2f, y = %.2f\n, z = %.2f\n',final_particle_pose_x, final_particle_pose_y, final_particle_pose_z)
+fprintf('The estimated position is x = %.2f, y = %.2f, z = %.2f\n',final_particle_pose_x, final_particle_pose_y, final_particle_pose_z)
