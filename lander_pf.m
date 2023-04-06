@@ -58,7 +58,7 @@ initial_mode = zeros(p.num_particles, 1); % descending, on bottom, ascending, on
 initial_bottom_time = zeros(p.num_particles, 1);
 
 % define State (hold all particles)
-state = struct('x', [], 'y', [], 'z', [], 'u', [], 'v', [], 'w', [], 'mode', [], 'bottom_time', []);
+state = struct('x', [], 'y', [], 'z', [], 'u', [], 'v', [], 'w', [], 'weight', [], 'mode', [], 'bottom_time', []);
 state.x = initial_x;
 state.y = initial_y;
 state.z = initial_z;
@@ -87,7 +87,7 @@ for t=0:p.delta_t:p.t_max
     state = motion_update(state,p);
 
     % measurement update
-
+    
 
     % cull and resample particles
 
