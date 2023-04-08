@@ -22,8 +22,8 @@ function [state] = motion_update(state, p)
                 state.z(i) = state.z(i) + state.w(i)*p.delta_t;
                 
                 % State transition
-                if state.z(i) > p.ocean_depth     % if at the seafloor
-                    state.mode(i) = 1;            % switch to 'on bottom'
+                if state.z(i) >= state.z_transition(i)            % if at the seafloor
+                    state.mode(i) = 1;                            % switch to 'on bottom'
 
                     state.u(i) = 0;
                     state.v(i) = 0;               % set velocities to zero
@@ -35,6 +35,9 @@ function [state] = motion_update(state, p)
                 
                 % Update bottom_time
                 state.bottom_time(i) = state.bottom_time(i) + p.delta_t;
+
+                % TO DO: ADD RANDOM 'JITTER'/WALK to PARTICLES RESTING ON BOTTOM
+                % x, y, z motion updates
 
                 % State transition
                 if state.bottom_time(i) > p.total_bottom_time     % if reach max time on bottom, start ascent
@@ -55,8 +58,8 @@ function [state] = motion_update(state, p)
                 state.z(i) = state.z(i) + state.w(i)*p.delta_t;
                 
                 % State transition
-                if state.z(i) < 1           % if within 1m of surface
-                    state.mode(i) = 3;      % switch to 'at surface'
+                if state.z(i) <= 0          % if reach z = 0
+                    state.mode(i) = 4;      % switch to 'at surface'
 
                     state.u(i) = 0;
                     state.v(i) = 0;         % set velocities to zero
