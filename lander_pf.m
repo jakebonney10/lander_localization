@@ -49,13 +49,6 @@ ship_y = 0; % Ship longitude at launch
 
 %%%%% INITIALIZE PARTICLES
 
-% @ Jake are these changes ok? Was unsure why using randn vs normrnd
-%initial_x = ship_x + p.position_std_dev * randn(p.num_particles, 1);
-%initial_y = ship_y + p.position_std_dev * randn(p.num_particles, 1);
-%initial_z = 5 + p.position_std_dev * randn(p.num_particles, 1);
-%initial_u = p.velocity_std_dev * randn(p.num_particles, 1);
-%initial_v = p.velocity_std_dev * randn(p.num_particles, 1);
-%initial_w = p.avg_descent_veloc + p.descent_std_dev * randn(p.num_particles, 1);
 initial_x = ship_x + normrnd(0, p.position_std_dev, num_particles, 1);
 initial_y = ship_y + normrnd(0, p.position_std_dev, num_particles, 1);
 initial_z = 5 + normrnd(0, p.position_std_dev, num_particles, 1);
