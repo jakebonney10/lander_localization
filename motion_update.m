@@ -11,7 +11,7 @@ function [state] = motion_update(state, p)
 
             case 0      % descending
 
-                % Update velcities u,v,w
+                % Update velocities u,v,w
                 state.u(i) = state.u(i) + normrnd(0, p.velocity_std_dev);
                 state.v(i) = state.v(i) + normrnd(0, p.velocity_std_dev);
                 state.w(i) = p.avg_descent_veloc + normrnd(0, p.velocity_std_dev);
