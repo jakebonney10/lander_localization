@@ -92,4 +92,4 @@ Researchers that contributed to this codebase include: Jake Bonney, Phil Parisi,
 
 François Beauducel (2023). LL2UTM and UTM2LL (https://www.mathworks.com/matlabcentral/fileexchange/45699-ll2utm-and-utm2ll), MATLAB Central File Exchange. Retrieved April 11, 2023.
 
-Copyright (c) 2011, SCOR/IAPSO WG127 (Scientific Committee on Oceanic Research/ International Association for the Physical Sciences of the Oceans, Working Group 127).
+Copyright (c) 2011, SCOR/IAPSO WG127 (Scientific Committee on Oceanic Research/ International Association for the Physical Sciences of the Oceans, Working Group 127). http://www.teos-10.org/index.htm
