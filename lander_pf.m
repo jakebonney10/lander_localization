@@ -10,6 +10,12 @@
     % 2. Ascending (motion and measurement updates)
     % 3. At Surface (no motion, particle's sim ends)
 
+% add path variables to access file + functions
+    if ispc() % windows
+        addpath("gsw_matlab_v3_06_16\","latlonutm\")
+    else      % mac, ubuntu
+        addpath("gsw_matlab_v3_06_16/","latlonutm/")
+    end
 
 clc, clearvars, close all
 
