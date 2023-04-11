@@ -102,7 +102,7 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     state = motion_update(state,p);
 
     % measurement update
-    [particle_range, weight] = measurement_update(state, p, ship, measurement, t);
+    [particle_range, state.weight] = measurement_update(state, p, ship, measurement, t);
 
     % cull and resample particles
 
