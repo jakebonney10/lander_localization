@@ -29,7 +29,7 @@ fn_lander = '20180921_110738.mat'; % lander .mat filename
 
 % Find lander origin (lat, lon, timestamp)
 start_depth = 1; % approximate depth to call start time for descent
-[origin_x, origin_y, origin_t] = lander_origin(ship, lander, start_depth);
+[origin_lat, origin_lon, origin_t] = lander_origin(ship, lander, start_depth);
 
 % Time
 p.t_start = origin_t;   % in seconds, unix timestamp from ship time
@@ -104,10 +104,11 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     % measurement update
     [range, range_time] = get_range_measurement(measurement, t, p.delta_t/2);
     if ~isempty(range)
-        % perform measurement update
-        % state = measurement_update(state, p, range, range_time);
+        [particle_range, weight] = measurement_update(state, p, ship, range, range_time, origin_lat, origin_lon);
         disp("Updating with range measurement")
         disp(range)
+        disp(particle_range)
+        disp(weight)
     end
 
     % cull and resample particles
