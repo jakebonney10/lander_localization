@@ -88,4 +88,8 @@ probably on the bottom)
 * Spawn new particles on top of the most confident particles and allow noise to drift them
 
 ## Acknowledgements
-Researchers that contributed to this codebase include: Jake Bonney, Phil Parisi, and Dave Casagrande. 
+Researchers that contributed to this codebase include: Jake Bonney, Phil Parisi, and Dave Casagrande. Thanks to François Beauducel for the lat/lon UTM matlab conversion function and to the creators of the gsw toolbox for ocean acoustics.
+
+François Beauducel (2023). LL2UTM and UTM2LL (https://www.mathworks.com/matlabcentral/fileexchange/45699-ll2utm-and-utm2ll), MATLAB Central File Exchange. Retrieved April 11, 2023.
+
+Copyright (c) 2011, SCOR/IAPSO WG127 (Scientific Committee on Oceanic Research/ International Association for the Physical Sciences of the Oceans, Working Group 127). http://www.teos-10.org/index.htm

@@ -14,7 +14,7 @@
 clc, clearvars, close all
 
 %%%%% USER INPUTS
-ocean_depth = 20;           % approximate ocean depth known before deployment (m) 
+ocean_depth = 600;          % approximate ocean depth known before deployment (m) 
 ocean_depth_sigma = 2;      % for particle transition to bottom (level of confidence of bottom)
 num_particles = 10;         % num of particles to use in estimation
 total_bottom_time = 20;     % seconds lander is programmed to sit on the bottom
@@ -22,9 +22,19 @@ total_bottom_time = 20;     % seconds lander is programmed to sit on the bottom
 
 %%%%% IMMUTABLE PARAMETERS
 
+% Load & plot lander data
+fn_topside = '20180921_110812.mat'; % topside .mat filename
+fn_lander = '20180921_110738.mat'; % lander .mat filename
+[ship, measurement, lander] = lander_data(fn_topside, fn_lander);
+
+% Find lander origin (lat, lon, timestamp)
+p.start_depth = 1; % approximate depth to call start time for descent
+[p.origin_lat, p.origin_lon, p.origin_t] = lander_origin(ship, lander, p.start_depth);
+
 % Time
+p.t_start = p.origin_t;   % in seconds, unix timestamp from ship time
 p.t_max = 1000;         % in seconds, maximum time to run the simulation
-p.delta_t = 0.2;        % in seconds, time step as we move through the simulation
+p.delta_t = 0.1;        % in seconds, time step as we move through the simulation
 
 % Knowns
 p.sound_speed = 1500; % (m/s) constant for now, will need this for range measurement later
@@ -53,7 +63,7 @@ initial_x = ship_x + normrnd(0, p.position_std_dev, num_particles, 1);
 initial_y = ship_y + normrnd(0, p.position_std_dev, num_particles, 1);
 initial_z = 5 + normrnd(0, p.position_std_dev, num_particles, 1);
 initial_u = normrnd(0, p.velocity_std_dev, num_particles, 1);
-initial_v = p.velocity_std_dev * randn(p.num_particles, 1);
+initial_v = normrnd(0, p.velocity_std_dev, num_particles, 1);
 initial_w = p.avg_descent_veloc + normrnd(0,p.descent_std_dev,num_particles,1);
 
 initial_z_transition = normrnd(ocean_depth,ocean_depth_sigma,num_particles,1);
@@ -86,13 +96,13 @@ pause(5)
 %%%%% RUN PARTICLE FILTER SIMULATION 
 disp('running particle filter')
 
-for t=0:p.delta_t:p.t_max
+for t=p.t_start:p.delta_t:p.t_start + p.t_max
 
     % motion update (update all states)
     state = motion_update(state,p);
 
     % measurement update
-    
+    [particle_range, state.weight] = measurement_update(state, p, ship, measurement, t);
 
     % cull and resample particles
 
