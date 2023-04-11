@@ -102,14 +102,7 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     state = motion_update(state,p);
 
     % measurement update
-    [range, range_t] = get_range_measurement(measurement, t, p.delta_t/2);
-    if ~isempty(range)
-        [particle_range, weight] = measurement_update(state, p, ship, range, range_t);
-        disp("Updating with range measurement")
-        disp(range)
-        disp(particle_range)
-        disp(weight)
-    end
+    [particle_range, weight] = measurement_update(state, p, ship, measurement, t);
 
     % cull and resample particles
 
