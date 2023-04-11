@@ -14,7 +14,7 @@
 clc, clearvars, close all
 
 %%%%% USER INPUTS
-ocean_depth = 600;           % approximate ocean depth known before deployment (m) 
+ocean_depth = 600;          % approximate ocean depth known before deployment (m) 
 ocean_depth_sigma = 2;      % for particle transition to bottom (level of confidence of bottom)
 num_particles = 10;         % num of particles to use in estimation
 total_bottom_time = 20;     % seconds lander is programmed to sit on the bottom
@@ -28,11 +28,11 @@ fn_lander = '20180921_110738.mat'; % lander .mat filename
 [ship, measurement, lander] = lander_data(fn_topside, fn_lander);
 
 % Find lander origin (lat, lon, timestamp)
-start_depth = 1; % approximate depth to call start time for descent
-[origin_lat, origin_lon, origin_t] = lander_origin(ship, lander, start_depth);
+p.start_depth = 1; % approximate depth to call start time for descent
+[p.origin_lat, p.origin_lon, p.origin_t] = lander_origin(ship, lander, p.start_depth);
 
 % Time
-p.t_start = origin_t;   % in seconds, unix timestamp from ship time
+p.t_start = p.origin_t;   % in seconds, unix timestamp from ship time
 p.t_max = 1000;         % in seconds, maximum time to run the simulation
 p.delta_t = 0.1;        % in seconds, time step as we move through the simulation
 
@@ -102,9 +102,9 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     state = motion_update(state,p);
 
     % measurement update
-    [range, range_time] = get_range_measurement(measurement, t, p.delta_t/2);
+    [range, range_t] = get_range_measurement(measurement, t, p.delta_t/2);
     if ~isempty(range)
-        [particle_range, weight] = measurement_update(state, p, ship, range, range_time, origin_lat, origin_lon);
+        [particle_range, weight] = measurement_update(state, p, ship, range, range_t);
         disp("Updating with range measurement")
         disp(range)
         disp(particle_range)

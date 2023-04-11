@@ -1,4 +1,4 @@
-function [particle_range, weight] = measurement_update(state, p, ship, range, range_time, origin_lat, origin_lon)
+function [particle_range, weight] = measurement_update(state, p, ship, range, range_time)
 
     % Define the current ship coordinates
     [idx] = find(ship.timestamp >= range_time , 1);
@@ -8,7 +8,7 @@ function [particle_range, weight] = measurement_update(state, p, ship, range, ra
     % Convert the global coordinates to local coordinates (UTM-origin)
     utm_zone = 19; % TODO: Dont hardcode this
     [ship_x, ship_y] = ll2utm(ship_lat, ship_lon, utm_zone);
-    [origin_x, origin_y] = ll2utm(origin_lat, origin_lon, utm_zone);
+    [origin_x, origin_y] = ll2utm(p.origin_lat, p.origin_lon, utm_zone);
     local_x = ship_x - origin_x;
     local_y = ship_y - origin_y;
     
