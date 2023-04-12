@@ -20,10 +20,10 @@
 clc, clearvars, close all
 
 %%%%% USER INPUTS
-ocean_depth = 600;          % approximate ocean depth known before deployment (m) 
-ocean_depth_sigma = 2;      % for particle transition to bottom (level of confidence of bottom)
-num_particles = 10;         % num of particles to use in estimation
-total_bottom_time = 20;     % seconds lander is programmed to sit on the bottom
+ocean_depth = 8370;           % approximate ocean depth known before deployment (m) 
+ocean_depth_sigma = 2;        % for particle transition to bottom (level of confidence of bottom)
+num_particles = 1000;         % num of particles to use in estimation
+total_bottom_time = 3600*4;   % seconds lander is programmed to sit on the bottom
 
 
 %%%%% IMMUTABLE PARAMETERS
@@ -47,8 +47,8 @@ p.sound_speed = 1500; % (m/s) constant for now, will need this for range measure
 p.ocean_depth = ocean_depth; % approximate ocean depth known before deployment (m) 
 p.ocean_depth_sigma = ocean_depth_sigma; % used for the probability of particles landing on the seafloor
 p.total_bottom_time = total_bottom_time; % estimated total bottom time in seconds
-p.avg_descent_veloc = 0.5; % descent velocity (m/s)
-p.avg_ascent_veloc = -0.5; % ascent velocity (m/s)
+p.avg_descent_veloc = 1.0; % descent velocity (m/s) 60 (m/min)
+p.avg_ascent_veloc = 1.0; % ascent velocity (m/s) 60 (m/min)
 p.num_particles = num_particles;
 
 % Uncertainties
@@ -67,7 +67,7 @@ ship_y = 0; % Ship longitude at launch
 
 initial.x = ship_x + normrnd(0, p.position_std_dev, num_particles, 1);
 initial.y = ship_y + normrnd(0, p.position_std_dev, num_particles, 1);
-initial.z = 5 + normrnd(0, p.position_std_dev, num_particles, 1);
+initial.z = p.start_depth + normrnd(0, p.position_std_dev, num_particles, 1);
 initial.u = normrnd(0, p.velocity_std_dev, num_particles, 1);
 initial.v = normrnd(0, p.velocity_std_dev, num_particles, 1);
 initial.w = p.avg_descent_veloc + normrnd(0,p.descent_std_dev,num_particles,1);
@@ -115,17 +115,35 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     if ~isempty(range)
         % measurement update
         disp("updating with range measurement")
-        [particle_range, state.weight] = measurement_update(state, p, ship, range, t);
+        [particle_range, state.weight, ship_x, ship_y] = measurement_update(state, p, ship, range, t);
+
+        % Pause and visualize 
+        plot3(state.x,state.y,state.z,'r.'), hold on
+        pause
 
         % resample particles
         disp("resampling particles")
         state = resample_particles(state);
+
+        % Pause and visualize 
+        plot3(state.x,state.y,state.z,'k.'), hold on
+        pause
+
+        % Plot sphere using plot3
+        [x, y, z] = range_sphere(range, ship_x, ship_y);
+        surf(x,y,z,'FaceAlpha',0.3, 'EdgeAlpha', 0.3); % Set the FaceAlpha property to 0.5 for semi-opacity
+        colormap(gray); % Set the colormap to grayscale
+        axis equal;
+        pause
+        hold off
+
+        
     end
 
 
     % visualize and pause
-    plot3(state.x,state.y,state.z,'r.'), hold off
-    pause(0.01)
+    %plot3(state.x,state.y,state.z,'r.'), hold off
+    %pause(0.01)
 
     % kill sim for any reason
     if state.finished_particles == p.num_particles
@@ -143,3 +161,8 @@ final_particle_pose_x = mean(state.x);
 final_particle_pose_y = mean(state.y);
 final_particle_pose_z = mean(state.z);
 fprintf('The estimated position is x = %.2f, y = %.2f, z = %.2f\n',final_particle_pose_x, final_particle_pose_y, final_particle_pose_z)
+
+
+%%%%% Ground truth
+csv_fn = 'lander_iridium_sept2018.csv';
+[local_x, local_y, surface_t] = ground_truth(csv_fn, p);
