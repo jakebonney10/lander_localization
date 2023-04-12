@@ -65,28 +65,28 @@ ship_y = 0; % Ship longitude at launch
 
 %%%%% INITIALIZE PARTICLES
 
-initial_x = ship_x + normrnd(0, p.position_std_dev, num_particles, 1);
-initial_y = ship_y + normrnd(0, p.position_std_dev, num_particles, 1);
-initial_z = 5 + normrnd(0, p.position_std_dev, num_particles, 1);
-initial_u = normrnd(0, p.velocity_std_dev, num_particles, 1);
-initial_v = normrnd(0, p.velocity_std_dev, num_particles, 1);
-initial_w = p.avg_descent_veloc + normrnd(0,p.descent_std_dev,num_particles,1);
+initial.x = ship_x + normrnd(0, p.position_std_dev, num_particles, 1);
+initial.y = ship_y + normrnd(0, p.position_std_dev, num_particles, 1);
+initial.z = 5 + normrnd(0, p.position_std_dev, num_particles, 1);
+initial.u = normrnd(0, p.velocity_std_dev, num_particles, 1);
+initial.v = normrnd(0, p.velocity_std_dev, num_particles, 1);
+initial.w = p.avg_descent_veloc + normrnd(0,p.descent_std_dev,num_particles,1);
 
-initial_z_transition = normrnd(ocean_depth,ocean_depth_sigma,num_particles,1);
-initial_mode = zeros(p.num_particles, 1); % descending, on bottom, ascending, on surface
-initial_bottom_time = zeros(p.num_particles, 1);
+initial.z_transition = normrnd(ocean_depth,ocean_depth_sigma,num_particles,1);
+initial.mode = zeros(p.num_particles, 1); % descending, on bottom, ascending, on surface
+initial.bottom_time = zeros(p.num_particles, 1);
 
 % define State (hold all particles)
 state = struct('x', [], 'y', [], 'z', [], 'u', [], 'v', [], 'w', [], 'weight', [], 'mode', [], 'bottom_time', []);
-state.x = initial_x;
-state.y = initial_y;
-state.z = initial_z;
-state.u = initial_u;
-state.v = initial_v;
-state.w = initial_w;
-state.z_transition = initial_z_transition;
-state.mode = initial_mode;
-state.bottom_time = initial_bottom_time;
+state.x = initial.x;
+state.y = initial.y;
+state.z = initial.z;
+state.u = initial.u;
+state.v = initial.v;
+state.w = initial.w;
+state.z_transition = initial.z_transition;
+state.mode = initial.mode;
+state.bottom_time = initial.bottom_time;
 state.finished_particles = 0;
 
 % Plot initial particle state
@@ -102,15 +102,25 @@ pause(5)
 %%%%% RUN PARTICLE FILTER SIMULATION 
 disp('running particle filter')
 
-for t=p.t_start:p.delta_t:p.t_start + p.t_max
+%for t=p.t_start:p.delta_t:p.t_start + p.t_max
+for t=p.t_start+200:p.delta_t:p.t_start + p.t_max
 
     % motion update (update all states)
     state = motion_update(state,p);
 
-    % measurement update
-    [particle_range, state.weight] = measurement_update(state, p, ship, measurement, t);
+    % get range measurement (if available)
+    [range, range_t] = get_range_measurement(measurement, t, p.delta_t/2);
 
-    % cull and resample particles
+    % if we have a range measurement
+    if ~isempty(range)
+        % measurement update
+        disp("updating with range measurement")
+        [particle_range, state.weight] = measurement_update(state, p, ship, range, t);
+
+        % resample particles
+        disp("resampling particles")
+        state = systematic_resample(state);
+    end
 
 
     % visualize and pause
