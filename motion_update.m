@@ -14,7 +14,7 @@ function [state] = motion_update(state, p)
                 % Update velocities u,v,w
                 state.u(i) = state.u(i) + normrnd(0, p.velocity_std_dev);
                 state.v(i) = state.v(i) + normrnd(0, p.velocity_std_dev);
-                state.w(i) = p.avg_descent_veloc + normrnd(0, p.velocity_std_dev);
+                state.w(i) = p.avg_descent_veloc + normrnd(0, p.descent_std_dev);
 
                 % Update positions x,y,z
                 state.x(i) = state.x(i) + state.u(i)*p.delta_t;
@@ -50,7 +50,7 @@ function [state] = motion_update(state, p)
                 % Update velocities u,v,w
                 state.u(i) = state.u(i) + normrnd(0, p.velocity_std_dev);
                 state.v(i) = state.v(i) + normrnd(0, p.velocity_std_dev);
-                state.w(i) = p.avg_ascent_veloc + normrnd(0, p.velocity_std_dev);
+                state.w(i) = p.avg_ascent_veloc + normrnd(0, p.descent_std_dev);
 
                 % Update positions x,y,z
                 state.x(i) = state.x(i) + state.u(i)*p.delta_t;

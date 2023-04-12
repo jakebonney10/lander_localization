@@ -52,8 +52,8 @@ p.avg_ascent_veloc = 1.0; % ascent velocity (m/s) 60 (m/min)
 p.num_particles = num_particles;
 
 % Uncertainties
-p.descent_std_dev = 0.1; % (m/s)
-p.position_std_dev = 0.1; % (m)
+p.descent_std_dev = 0.25; % (m/s)
+p.position_std_dev = 10; % (m)
 p.velocity_std_dev = 0.01; % (m/s)
 
 %%%%% OTHER PARAMETERS
