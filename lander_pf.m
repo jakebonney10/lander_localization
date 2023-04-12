@@ -39,8 +39,8 @@ p.start_depth = 1; % approximate depth to call start time for descent
 
 % Time
 p.t_start = p.origin_t;   % in seconds, unix timestamp from ship time
-p.t_max = 1000;         % in seconds, maximum time to run the simulation
-p.delta_t = 0.1;        % in seconds, time step as we move through the simulation
+p.t_max = 1e8;         % in seconds, maximum time to run the simulation
+p.delta_t = 1;        % in seconds, time step as we move through the simulation
 
 % Knowns
 p.sound_speed = 1500; % (m/s) constant for now, will need this for range measurement later
@@ -117,25 +117,29 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
         disp("updating with range measurement")
         [particle_range, state.weight, ship_x, ship_y] = measurement_update(state, p, ship, range, t);
 
-        % Pause and visualize 
-        plot3(state.x,state.y,state.z,'r.'), hold on
-        pause
+%         % Pause and visualize 
+%         plot3(state.x,state.y,state.z,'r.'), hold on
+%         pause
 
         % resample particles
         disp("resampling particles")
         state = resample_particles(state);
 
-        % Pause and visualize 
-        plot3(state.x,state.y,state.z,'k.'), hold on
-        pause
+%         % Pause and visualize 
+%         plot3(state.x,state.y,state.z,'k.'), hold on
+%         pause
 
-        % Plot sphere using plot3
-        [x, y, z] = range_sphere(range, ship_x, ship_y);
-        surf(x,y,z,'FaceAlpha',0.3, 'EdgeAlpha', 0.3); % Set the FaceAlpha property to 0.5 for semi-opacity
-        colormap(gray); % Set the colormap to grayscale
-        axis equal;
-        pause
-        hold off
+%         % Add a marker at the position of the ship
+%         ship_z = 0;
+%         scatter3(ship_x, ship_y, ship_z, 'Marker', 'o', 'MarkerFaceColor', 'red', 'MarkerEdgeColor', 'none', 'SizeData', 200);
+
+%         % Plot sphere using plot3
+%         [x, y, z] = range_sphere(range, ship_x, ship_y);
+%         surf(x,y,z,'FaceAlpha',0.3, 'EdgeAlpha', 0.3); % Set the FaceAlpha property to 0.5 for semi-opacity
+%         colormap(gray); % Set the colormap to grayscale
+%         axis equal;
+%         pause
+%         hold off
 
         
     end

@@ -36,8 +36,14 @@ function [state] = motion_update(state, p)
                 % Update bottom_time
                 state.bottom_time(i) = state.bottom_time(i) + p.delta_t;
 
-                % TO DO: ADD RANDOM 'JITTER'/WALK to PARTICLES RESTING ON BOTTOM
-                % x, y, z motion updates
+                % TO DO: RANDOM 'JITTER'/WALK to PARTICLES RESTING ON
+                % BOTTOM MAY NEED TO TUNE SIGMA
+                % x, y, z motion updates 
+
+                state.x(i) = state.x(i) + normrnd(0, p.velocity_std_dev);
+                state.y(i) = state.y(i) + normrnd(0, p.velocity_std_dev);
+                state.z(i) = state.z(i) + normrnd(0, p.velocity_std_dev);
+
 
                 % State transition
                 if state.bottom_time(i) > p.total_bottom_time     % if reach max time on bottom, start ascent
