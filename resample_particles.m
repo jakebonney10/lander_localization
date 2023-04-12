@@ -1,5 +1,5 @@
 function state = resample_particles(state)
-% stoachsatic universal resampling (SUR) for particles based off their weights
+% stochastic universal resampling (SUR) for particles based off their weights
 
 
 % Compute cumulative sum of particle weights
