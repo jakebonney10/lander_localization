@@ -103,7 +103,7 @@ pause(5)
 disp('running particle filter')
 
 %for t=p.t_start:p.delta_t:p.t_start + p.t_max
-for t=p.t_start+200:p.delta_t:p.t_start + p.t_max
+for t=p.t_start:p.delta_t:p.t_start + p.t_max
 
     % motion update (update all states)
     state = motion_update(state,p);
