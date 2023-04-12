@@ -119,7 +119,7 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
 
         % resample particles
         disp("resampling particles")
-        state = systematic_resample(state);
+        state = resample_particles(state);
     end
 
 
