@@ -1,4 +1,4 @@
-function [particle_range, weight] = measurement_update(state, p, ship, range, range_t)
+function [particle_range, weight, local_x, local_y] = measurement_update(state, p, ship, range, range_t)
 
 
 
@@ -27,7 +27,7 @@ local_z = 0;
 
 
 % Gaussian params
-sigma = 100; % set the standard deviation of the Gaussian distribution
+sigma = 10; % set the standard deviation of the Gaussian distribution
 mu = range;  % set mu to be the true range, we want particles that are
 % closer to the true range to have higher weights than those farther away.
 
@@ -52,8 +52,8 @@ weight = weight / sum(weight);
 
 % Display
 disp(range)
-disp(particle_range)
-disp(weight)
+%disp(particle_range)
+%disp(weight)
 
 
 
