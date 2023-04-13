@@ -149,13 +149,13 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     end
 
 
-    % Record mean data for post analysis
-    master_particle.x(t) = mean(state.x);
-    master_particle.y(t) = mean(state.y);
-    master_particle.z(t) = mean(state.z);
-    master_particle.u(t) = mean(state.u);
-    master_particle.v(t) = mean(state.v);
-    master_particle.w(t) = mean(state.w);
+%     % Record mean data for post analysis
+%     master_particle.x(t) = mean(state.x);
+%     master_particle.y(t) = mean(state.y);
+%     master_particle.z(t) = mean(state.z);
+%     master_particle.u(t) = mean(state.u);
+%     master_particle.v(t) = mean(state.v);
+%     master_particle.w(t) = mean(state.w);
 
 
     % kill sim for any reason
