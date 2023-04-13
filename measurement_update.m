@@ -1,6 +1,7 @@
 function [particle_range, weight, local_x, local_y] = measurement_update(state, p, ship, range, range_t)
 
-
+% Start the timer
+tic
 
 % Define the current ship coordinates
 [idx] = find(ship.timestamp >= range_t , 1);
@@ -31,8 +32,11 @@ sigma = 100; % set the standard deviation of the Gaussian distribution
 mu = range;  % set mu to be the true range, we want particles that are
 % closer to the true range to have higher weights than those farther away.
 
+% Initialize arrays for parallel processing
+particle_range = zeros(1, p.num_particles);
+weight = zeros(1, p.num_particles);
 
-for i = 1:p.num_particles
+parfor i = 1:p.num_particles
 
     % Calculate range to ship for each particle
     x = state.x(i) - local_x;
@@ -49,12 +53,14 @@ end
 % Normalize the weights so that their sum is equal to 1
 weight = weight / sum(weight);
 
-
-% Display
+% Display true range
+disp('The true range measurement is: ')
 disp(range)
-%disp(particle_range)
-%disp(weight)
 
+% Stop the timer and record the elapsed time
+elapsed_time = toc;
 
+disp('The elapsed time is: ')
+disp(elapsed_time)
 
 end
