@@ -1,4 +1,4 @@
-function [ship, measurement, lander] = lander_data(fn_topside, fn_lander)
+function [ship, measurement, lander] = get_lander_data(fn_topside, fn_lander)
 % lander_data 
 % Bonney and Parisi
 % GOAL: Load lander data (lat, lon, range, depth) for particle filter localization.
@@ -13,8 +13,8 @@ ship.timestamp = double(gps_gprmc_t_GPS_GPRMC_DATA.timestamp)/1e6;
 measurement.range = benthos_release_status_t_BENTHOS_RELEASE_STATUS.range;
 measurement.timestamp = double(benthos_release_status_t_BENTHOS_RELEASE_STATUS.timestamp)/1e6;
 
-% Get rid of all 0,1,2 NFG ranges 
-idx = measurement.range > 2;
+% Get rid of all 0,1,2 NFG ranges and ranges less than 150
+idx = measurement.range > 150;
 measurement.range = measurement.range(idx);
 measurement.timestamp = measurement.timestamp(idx);
 

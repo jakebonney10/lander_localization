@@ -31,7 +31,7 @@ total_bottom_time = 3600*4;   % seconds lander is programmed to sit on the botto
 % Load & plot lander data
 fn_topside = '20180921_110812.mat'; % topside .mat filename
 fn_lander = '20180921_110738.mat'; % lander .mat filename
-[ship, measurement, lander] = lander_data(fn_topside, fn_lander);
+[ship, measurement, lander] = get_lander_data(fn_topside, fn_lander);
 
 % Find lander origin (lat, lon, timestamp)
 p.start_depth = 1; % approximate depth to call start time for descent
@@ -90,12 +90,13 @@ state.bottom_time = initial.bottom_time;
 state.finished_particles = 0;
 
 % Plot initial particle state
-plot3(state.x,state.y,state.z,'b.')
-set(gca, 'ZDir', 'reverse');
-axis equal
-hold on
+figure
+% plot3(state.x,state.y,state.z,'b.')
+% set(gca, 'ZDir', 'reverse');
+% axis equal
+% hold on
 
-disp('displaying particles')
+% disp('displaying particles')
 pause(5)
 
 
@@ -117,29 +118,28 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
         disp("updating with range measurement")
         [particle_range, state.weight, ship_x, ship_y] = measurement_update(state, p, ship, range, t);
 
-%         % Pause and visualize 
-%         plot3(state.x,state.y,state.z,'r.'), hold on
-%         pause
+        % Pause and visualize 
+        plot3(state.x,state.y,state.z,'r.'), hold on
 
         % resample particles
         disp("resampling particles")
         state = resample_particles(state);
 
-%         % Pause and visualize 
-%         plot3(state.x,state.y,state.z,'k.'), hold on
-%         pause
+        % Pause and visualize 
+        plot3(state.x,state.y,state.z,'k.'), hold on
 
-%         % Add a marker at the position of the ship
-%         ship_z = 0;
-%         scatter3(ship_x, ship_y, ship_z, 'Marker', 'o', 'MarkerFaceColor', 'red', 'MarkerEdgeColor', 'none', 'SizeData', 200);
+        % Add a marker at the position of the ship
+        ship_z = 0;
+        scatter3(ship_x, ship_y, ship_z, 'Marker', 'o', 'MarkerFaceColor', 'red', 'MarkerEdgeColor', 'none', 'SizeData', 200);
 
-%         % Plot sphere using plot3
-%         [x, y, z] = range_sphere(range, ship_x, ship_y);
-%         surf(x,y,z,'FaceAlpha',0.3, 'EdgeAlpha', 0.3); % Set the FaceAlpha property to 0.5 for semi-opacity
-%         colormap(gray); % Set the colormap to grayscale
-%         axis equal;
-%         pause
-%         hold off
+        % Plot sphere using plot3
+        [x, y, z] = range_sphere(range, ship_x, ship_y);
+        surf(x,y,z,'FaceAlpha',0.3, 'EdgeAlpha', 0.3); % Set the FaceAlpha property to 0.5 for semi-opacity
+        colormap(gray); % Set the colormap to grayscale
+        axis equal;
+        set(gca, 'ZDir', 'reverse');
+        hold off
+        pause(5)
 
         
     end
