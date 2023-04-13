@@ -27,7 +27,7 @@ local_z = 0;
 
 
 % Gaussian params
-sigma = 10; % set the standard deviation of the Gaussian distribution
+sigma = 100; % set the standard deviation of the Gaussian distribution
 mu = range;  % set mu to be the true range, we want particles that are
 % closer to the true range to have higher weights than those farther away.
 

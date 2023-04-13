@@ -20,8 +20,8 @@
 clc, clearvars, close all
 
 %%%%% USER INPUTS
-ocean_depth = 8370;           % approximate ocean depth known before deployment (m) 
-ocean_depth_sigma = 2;        % for particle transition to bottom (level of confidence of bottom)
+ocean_depth = 8375;           % approximate ocean depth known before deployment (m) 
+ocean_depth_sigma = 10;        % for particle transition to bottom (level of confidence of bottom)
 num_particles = 1000;         % num of particles to use in estimation
 total_bottom_time = 3600*4;   % seconds lander is programmed to sit on the bottom
 
@@ -48,12 +48,12 @@ p.ocean_depth = ocean_depth; % approximate ocean depth known before deployment (
 p.ocean_depth_sigma = ocean_depth_sigma; % used for the probability of particles landing on the seafloor
 p.total_bottom_time = total_bottom_time; % estimated total bottom time in seconds
 p.avg_descent_veloc = 1.0; % descent velocity (m/s) 60 (m/min)
-p.avg_ascent_veloc = 1.0; % ascent velocity (m/s) 60 (m/min)
+p.avg_ascent_veloc = -1.0; % ascent velocity (m/s) 60 (m/min)
 p.num_particles = num_particles;
 
 % Uncertainties
 p.descent_std_dev = 0.25; % (m/s)
-p.position_std_dev = 10; % (m)
+p.position_std_dev = 100; % (m)
 p.velocity_std_dev = 0.01; % (m/s)
 
 %%%%% OTHER PARAMETERS

@@ -45,7 +45,8 @@ function [state] = motion_update(state, p)
                 state.z(i) = state.z(i) + normrnd(0, p.velocity_std_dev);
 
 
-                % State transition
+                % State transition TODO: ADD UNCERTAINTY TO THIS TRANSITION
+                % TIME. TOO EXACT RIGHT NOW.
                 if state.bottom_time(i) > p.total_bottom_time     % if reach max time on bottom, start ascent
                     state.mode(i) = 2;                            % switch to 'ascending'
                 end
