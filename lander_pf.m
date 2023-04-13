@@ -20,10 +20,11 @@
 clc, clearvars, close all
 
 %%%%% USER INPUTS
-ocean_depth = 8375;           % approximate ocean depth known before deployment (m) 
-ocean_depth_sigma = 10;        % for particle transition to bottom (level of confidence of bottom)
-num_particles = 1000;         % num of particles to use in estimation
-total_bottom_time = 3600*4;   % seconds lander is programmed to sit on the bottom
+ocean_depth = 8375;             % approximate ocean depth known before deployment (m) 
+ocean_depth_sigma = 10;         % for particle transition to bottom (level of confidence of bottom)
+num_particles = 1000;           % num of particles to use in estimation
+total_bottom_time = 3600*4;     % seconds lander is programmed to sit on the bottom
+total_bottom_time_sigma = 60*5; % variation in minutes for total bottom time
 
 
 %%%%% IMMUTABLE PARAMETERS
@@ -47,6 +48,7 @@ p.sound_speed = 1500; % (m/s) constant for now, will need this for range measure
 p.ocean_depth = ocean_depth; % approximate ocean depth known before deployment (m) 
 p.ocean_depth_sigma = ocean_depth_sigma; % used for the probability of particles landing on the seafloor
 p.total_bottom_time = total_bottom_time; % estimated total bottom time in seconds
+p.total_bottom_time_sigma = total_bottom_time_sigma;
 p.avg_descent_veloc = 1.0; % descent velocity (m/s) 60 (m/min)
 p.avg_ascent_veloc = -1.0; % ascent velocity (m/s) 60 (m/min)
 p.num_particles = num_particles;
@@ -73,11 +75,12 @@ initial.v = normrnd(0, p.velocity_std_dev, num_particles, 1);
 initial.w = p.avg_descent_veloc + normrnd(0,p.descent_std_dev,num_particles,1);
 
 initial.z_transition = normrnd(ocean_depth,ocean_depth_sigma,num_particles,1);
+initial.total_bottom_time = normrnd(p.total_bottom_time,p.total_bottom_time_sigma,num_particles,1);
 initial.mode = zeros(p.num_particles, 1); % descending, on bottom, ascending, on surface
 initial.bottom_time = zeros(p.num_particles, 1);
 
 % define State (hold all particles)
-state = struct('x', [], 'y', [], 'z', [], 'u', [], 'v', [], 'w', [], 'weight', [], 'mode', [], 'bottom_time', []);
+state = struct('x', [], 'y', [], 'z', [], 'u', [], 'v', [], 'w', [], 'weight', [], 'mode', [], 'bottom_time', [], 'total_bottom_time', [], 'finished_particles', []);
 state.x = initial.x;
 state.y = initial.y;
 state.z = initial.z;
@@ -87,6 +90,7 @@ state.w = initial.w;
 state.z_transition = initial.z_transition;
 state.mode = initial.mode;
 state.bottom_time = initial.bottom_time;
+state.total_bottom_time = initial.total_bottom_time;
 state.finished_particles = 0;
 
 % Plot initial particle state
@@ -145,9 +149,14 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     end
 
 
-    % visualize and pause
-    %plot3(state.x,state.y,state.z,'r.'), hold off
-    %pause(0.01)
+    % Record mean data for post analysis
+    master_particle.x(t) = mean(state.x);
+    master_particle.y(t) = mean(state.y);
+    master_particle.z(t) = mean(state.z);
+    master_particle.u(t) = mean(state.u);
+    master_particle.v(t) = mean(state.v);
+    master_particle.w(t) = mean(state.w);
+
 
     % kill sim for any reason
     if state.finished_particles == p.num_particles

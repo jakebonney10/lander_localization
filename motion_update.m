@@ -47,7 +47,7 @@ function [state] = motion_update(state, p)
 
                 % State transition TODO: ADD UNCERTAINTY TO THIS TRANSITION
                 % TIME. TOO EXACT RIGHT NOW.
-                if state.bottom_time(i) > p.total_bottom_time     % if reach max time on bottom, start ascent
+                if state.bottom_time(i) > state.total_bottom_time(i)     % if reach max time on bottom, start ascent
                     state.mode(i) = 2;                            % switch to 'ascending'
                 end
 
