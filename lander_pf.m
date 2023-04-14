@@ -35,7 +35,7 @@ fn_lander = '20180921_110738.mat'; % lander .mat filename
 [ship, measurement, lander] = get_lander_data(fn_topside, fn_lander);
 
 % Find lander origin (lat, lon, timestamp)
-p.start_depth = 1; % approximate depth to call start time for descent
+p.start_depth = 1; %transition h = 1; % approximate depth to call start time for descent
 [p.origin_lat, p.origin_lon, p.origin_t] = lander_origin(ship, lander, p.start_depth);
 
 % Time
@@ -95,15 +95,19 @@ state.total_bottom_time = initial.total_bottom_time;
 state.finished_particles = 0;
 
 % Plot initial particle state
-figure
+f1 = figure;
 % plot3(state.x,state.y,state.z,'b.')
 % set(gca, 'ZDir', 'reverse');
 % axis equal
 % hold on
 
 % disp('displaying particles')
-pause(5)
+%pause(5)
 
+%%%% RECORD FRAMES FOR A VIDEO
+writerObj = VideoWriter(datestr(datetime('now'), 'yyyymmddHHMMSS'),'Motion JPEG AVI');
+writerObj.FrameRate = 1;
+open(writerObj);
 
 %%%%% RUN PARTICLE FILTER SIMULATION 
 disp('running particle filter')
@@ -144,7 +148,14 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
         axis equal;
         set(gca, 'ZDir', 'reverse');
         hold off
+        title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),')');
+        title(title_str,'fontsize',8) 
         pause(3)
+    
+        % write the figure to a frame, save into the video
+        F = getframe(f1);
+        writeVideo(writerObj,F);
+
 
         
     end
@@ -180,3 +191,6 @@ fprintf('The estimated position is x = %.2f, y = %.2f, z = %.2f\n',final_particl
 %%%%% Ground truth
 csv_fn = 'lander_iridium_sept2018.csv';
 [local_x, local_y, surface_t] = ground_truth(csv_fn, p);
+
+% close video
+close(writerObj)
