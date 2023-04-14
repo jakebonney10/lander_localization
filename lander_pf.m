@@ -58,6 +58,7 @@ p.descent_std_dev = 0.25; % (m/s)
 p.position_std_dev = 100; % (m)
 p.velocity_std_dev = 0.01; % (m/s)
 p.start_depth_sigma = 25; % (m)
+p.on_bottom_position_sigma = 1.0; % (m)
 
 %%%%% OTHER PARAMETERS
 
