@@ -36,18 +36,15 @@ mu = range;  % set mu to be the true range, we want particles that are
 particle_range = zeros(1, p.num_particles);
 weight = zeros(1, p.num_particles);
 
-parfor i = 1:p.num_particles
 
-    % Calculate range to ship for each particle
-    x = state.x(i) - local_x;
-    y = state.y(i) - local_y;
-    z = state.z(i) - local_z;
-    particle_range(i) = sqrt(x.^2 + y.^2 + z.^2);
+% Calculate range to ship for each particle
+x = state.x - local_x;
+y = state.y - local_y;
+z = state.z - local_z;
+particle_range = sqrt(x.^2 + y.^2 + z.^2);
 
-    % Calculate weight of each particle using Gaussian function
-    weight(i) = normpdf(particle_range(i), mu, sigma);
-
-end
+% Calculate weight of each particle using Gaussian function
+weight = normpdf(particle_range, mu, sigma);
 
 
 % Normalize the weights so that their sum is equal to 1

@@ -22,7 +22,7 @@ clc, clearvars, close all
 %%%%% USER INPUTS
 ocean_depth = 8375;             % approximate ocean depth known before deployment (m) 
 ocean_depth_sigma = 10;         % for particle transition to bottom (level of confidence of bottom)
-num_particles = 1000;           % num of particles to use in estimation
+num_particles = 100000;           % num of particles to use in estimation
 total_bottom_time = 3600*4;     % seconds lander is programmed to sit on the bottom
 total_bottom_time_sigma = 60*5; % variation in minutes for total bottom time
 
