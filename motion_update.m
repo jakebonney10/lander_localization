@@ -1,5 +1,7 @@
 function [state] = motion_update(state, p)
-    
+% motion update for particles vectorized using boolean statements for mode
+% switching and transitions. 
+
     % Start the timer
     tic
     
