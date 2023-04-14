@@ -1,90 +1,69 @@
 function [state] = motion_update(state, p)
+% motion update for particles vectorized using boolean statements for mode
+% switching and transitions. 
+
+    % Start the timer
+    tic
+    
+    %%%% MODE 0: DESCENDING
+    % Descending Motion Model
+    idx_descending = state.mode == 0;
+    state.u(idx_descending) = state.u(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1);
+    state.v(idx_descending) = state.v(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1);
+    state.w(idx_descending) = p.avg_descent_veloc + normrnd(0, p.descent_std_dev, sum(idx_descending), 1);
+    state.x(idx_descending) = state.x(idx_descending) + state.u(idx_descending)*p.delta_t;
+    state.y(idx_descending) = state.y(idx_descending) + state.v(idx_descending)*p.delta_t;
+    state.z(idx_descending) = state.z(idx_descending) + state.w(idx_descending)*p.delta_t;
+
+    % Transition from Descending to On Bottom
+    idx_0_to_1 = (state.z >= state.z_transition & state.mode == 0);
+    state.mode(idx_0_to_1) = 1;
 
 
-    % motion model update for each particle
-    for i=1:p.num_particles
-        
+    %%%% MODE 1: ON BOTTOM
+    % On Bottom Motion Model
+    idx_on_bottom = (state.mode == 1);
+    state.bottom_time(idx_on_bottom) = state.bottom_time(idx_on_bottom) + p.delta_t;
+    state.u(idx_on_bottom) = 0;
+    state.v(idx_on_bottom) = 0; % set velocities to zero on bottom
+    state.w(idx_on_bottom) = 0;
+    state.x(idx_on_bottom) = state.x(idx_on_bottom) + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom),1);
+    state.y(idx_on_bottom) = state.y(idx_on_bottom) + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom),1);
+    state.z(idx_on_bottom) = state.z(idx_on_bottom) + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom),1);
+    % TO DO: UPDATE THE p.velocity_std_dev to a p.on_bottom_position_sigma
 
-        % SWITCH BASED ON MODE for each particle
-        switch state.mode(i)
-
-
-            case 0      % descending
-
-                % Update velocities u,v,w
-                state.u(i) = state.u(i) + normrnd(0, p.velocity_std_dev);
-                state.v(i) = state.v(i) + normrnd(0, p.velocity_std_dev);
-                state.w(i) = p.avg_descent_veloc + normrnd(0, p.descent_std_dev);
-
-                % Update positions x,y,z
-                state.x(i) = state.x(i) + state.u(i)*p.delta_t;
-                state.y(i) = state.y(i) + state.v(i)*p.delta_t;
-                state.z(i) = state.z(i) + state.w(i)*p.delta_t;
-                
-                % State transition
-                if state.z(i) >= state.z_transition(i)            % if at the seafloor
-                    state.mode(i) = 1;                            % switch to 'on bottom'
-
-                    state.u(i) = 0;
-                    state.v(i) = 0;               % set velocities to zero
-                    state.w(i) = 0;
-                end
+    % Transition from On Bottom to Ascending
+    idx_1_to_2 = (state.bottom_time > state.total_bottom_time & state.mode == 1);
+    state.mode(idx_1_to_2) = 2;
 
 
-            case 1      % on bottom
-                
-                % Update bottom_time
-                state.bottom_time(i) = state.bottom_time(i) + p.delta_t;
+    %%%% MODE 2: ASCENDING
+    % Ascending Motion Model
+    idx_ascending = (state.mode == 2);
+    state.u(idx_ascending) = state.u(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1);
+    state.v(idx_ascending) = state.v(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1);
+                                                            %p.ascent_std_dev? rename this param maybe
+    state.w(idx_ascending) = p.avg_ascent_veloc + normrnd(0, p.descent_std_dev, sum(idx_ascending), 1);
+    state.x(idx_ascending) = state.x(idx_ascending) + state.u(idx_ascending)*p.delta_t;
+    state.y(idx_ascending) = state.y(idx_ascending) + state.v(idx_ascending)*p.delta_t;
+    state.z(idx_ascending) = state.z(idx_ascending) + state.w(idx_ascending)*p.delta_t;
+    
+    % Transition to surface
+    idx_2_to_3 = (state.z <= 0 & state.mode == 2); % what is our threshold for the surface?
+    state.mode(idx_2_to_3) = 3;
+    
 
-                % TO DO: RANDOM 'JITTER'/WALK to PARTICLES RESTING ON
-                % BOTTOM MAY NEED TO TUNE SIGMA
-                % x, y, z motion updates 
+    %%%% MODE 3: ON SURFACE
+    % On Surface Motion Model (no motion)
+            % just do nothing. calculations stop when in mode 3.
+    idx_on_surface = (state.mode == 3);
+    state.finished_particles = sum(idx_on_surface);
 
-                state.x(i) = state.x(i) + normrnd(0, p.velocity_std_dev);
-                state.y(i) = state.y(i) + normrnd(0, p.velocity_std_dev);
-                state.z(i) = state.z(i) + normrnd(0, p.velocity_std_dev);
-
-
-                % State transition TODO: ADD UNCERTAINTY TO THIS TRANSITION
-                % TIME. TOO EXACT RIGHT NOW.
-                if state.bottom_time(i) > state.total_bottom_time(i)     % if reach max time on bottom, start ascent
-                    state.mode(i) = 2;                            % switch to 'ascending'
-                end
-
-
-            case 2      % ascending
-
-                % Update velocities u,v,w
-                state.u(i) = state.u(i) + normrnd(0, p.velocity_std_dev);
-                state.v(i) = state.v(i) + normrnd(0, p.velocity_std_dev);
-                state.w(i) = p.avg_ascent_veloc + normrnd(0, p.descent_std_dev);
-
-                % Update positions x,y,z
-                state.x(i) = state.x(i) + state.u(i)*p.delta_t;
-                state.y(i) = state.y(i) + state.v(i)*p.delta_t;
-                state.z(i) = state.z(i) + state.w(i)*p.delta_t;
-                
-                % State transition
-                if state.z(i) <= 0          % if reach z = 0
-                    state.mode(i) = 4;      % switch to 'at surface'
-
-                    state.u(i) = 0;
-                    state.v(i) = 0;         % set velocities to zero
-                    state.w(i) = 0;
-
-                    state.finished_particles = state.finished_particles + 1;
-                end
-
-
-            case 3      % at surface
-
-                % basically don't do anything. let particles sit and wait for the rest to come up.
-                % this is the final state.
-
-        end     % end switch statement
-
-
-    end     % end for loop over each particle
-
-
-end         % end function definition
+    
+    % Stop the timer and record the elapsed time
+    elapsed_time = toc;
+    
+    disp('The elapsed time for the motion update is: ')
+    disp(elapsed_time)
+    
+end
