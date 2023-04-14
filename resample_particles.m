@@ -1,6 +1,8 @@
 function state = resample_particles(state)
 % stochastic universal resampling (SUR) for particles based off their weights
 
+% Start the timer
+tic
 
 % Compute cumulative sum of particle weights
 w_cumulative = cumsum(state.weight);
@@ -39,5 +41,10 @@ state.bottom_time = state.bottom_time(indices);
 % reset particle weights to uniform values
 state.weight = ones(length(state.weight), 1) / length(state.weight); 
 
+% Stop the timer and record the elapsed time
+elapsed_time = toc;
+
+disp('The elapsed time for resampling is: ')
+disp(elapsed_time)
 
 end

@@ -143,7 +143,7 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
         axis equal;
         set(gca, 'ZDir', 'reverse');
         hold off
-        pause(5)
+        pause(3)
 
         
     end

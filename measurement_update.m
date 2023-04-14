@@ -57,7 +57,7 @@ disp(range)
 % Stop the timer and record the elapsed time
 elapsed_time = toc;
 
-disp('The elapsed time is: ')
+disp('The elapsed time for the measurement update is: ')
 disp(elapsed_time)
 
 end
