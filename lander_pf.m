@@ -22,17 +22,22 @@ clc, clearvars, close all
 %%%%% USER INPUTS
 ocean_depth = 8375;             % approximate ocean depth known before deployment (m) 
 ocean_depth_sigma = 10;         % for particle transition to bottom (level of confidence of bottom)
-num_particles = 100000;           % num of particles to use in estimation
+num_particles = 100000;         % num of particles to use in estimation
 total_bottom_time = 3600*4;     % seconds lander is programmed to sit on the bottom
 total_bottom_time_sigma = 60*5; % variation in minutes for total bottom time
-
+use_range_correction = 1;       % Set to 1 to use range correction with ssp
 
 %%%%% IMMUTABLE PARAMETERS
 
 % Load & plot lander data
 fn_topside = '20180921_110812.mat'; % topside .mat filename
 fn_lander = '20180921_110738.mat'; % lander .mat filename
-[ship, measurement, lander] = get_lander_data(fn_topside, fn_lander);
+[ship, measurement, lander, ssp] = get_lander_data(fn_topside, fn_lander);
+
+% SSP range correction
+if use_range_correction == 1
+    [measurement.range] = range_correction(ssp, measurement, lander);
+end
 
 % Find lander origin (lat, lon, timestamp)
 p.start_depth = 1; %transition h = 1; % approximate depth to call start time for descent
@@ -150,13 +155,11 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
         hold off
         title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),')');
         title(title_str,'fontsize',8) 
-        pause(3)
+        pause(2)
     
         % write the figure to a frame, save into the video
         F = getframe(f1);
         writeVideo(writerObj,F);
-
-
         
     end
 
