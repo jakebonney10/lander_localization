@@ -15,7 +15,7 @@ extractions = 1/(2*n):1/n:(2*n-1)/(2*n); % where we pull indices from on the cum
 indices = zeros(length(state.weight), 1);
 
 % Loop over all particles, find the index in the cumsum closest to our extraction values
-for i = 1:n             % to go thru extractions
+parfor i = 1:n             % to go thru extractions
     for j = 1:n         % to go thru w_cumulative
         if (w_cumulative(j)> extractions(i)) % criteria to select a particle to live on
             indices(i) = j; % save the particle index we want to include

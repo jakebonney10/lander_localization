@@ -16,7 +16,8 @@ function [state] = motion_update(state, p)
     
     % On bottom
     idx_on_bottom = state.mode == 1;
-    bottom_time = state.bottom_time + p.delta_t;
+    bottom_time = state.bottom_time;
+    bottom_time(idx_on_bottom) = bottom_time(idx_on_bottom) + p.delta_t;
     x = state.x + normrnd(0, p.velocity_std_dev, size(state.x));
     y = state.y + normrnd(0, p.velocity_std_dev, size(state.y));
     z = state.z + normrnd(0, p.velocity_std_dev, size(state.z));
