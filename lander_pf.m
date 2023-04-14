@@ -49,14 +49,15 @@ p.ocean_depth = ocean_depth; % approximate ocean depth known before deployment (
 p.ocean_depth_sigma = ocean_depth_sigma; % used for the probability of particles landing on the seafloor
 p.total_bottom_time = total_bottom_time; % estimated total bottom time in seconds
 p.total_bottom_time_sigma = total_bottom_time_sigma;
-p.avg_descent_veloc = 1.0; % descent velocity (m/s) 60 (m/min)
-p.avg_ascent_veloc = -1.0; % ascent velocity (m/s) 60 (m/min)
+p.avg_descent_veloc = 1.1; % descent velocity (m/s) 60 (m/min)
+p.avg_ascent_veloc = -1.1; % ascent velocity (m/s) 60 (m/min)
 p.num_particles = num_particles;
 
 % Uncertainties
 p.descent_std_dev = 0.25; % (m/s)
 p.position_std_dev = 100; % (m)
 p.velocity_std_dev = 0.01; % (m/s)
+p.start_depth_sigma = 25; % (m)
 
 %%%%% OTHER PARAMETERS
 
@@ -69,7 +70,7 @@ ship_y = 0; % Ship longitude at launch
 
 initial.x = ship_x + normrnd(0, p.position_std_dev, num_particles, 1);
 initial.y = ship_y + normrnd(0, p.position_std_dev, num_particles, 1);
-initial.z = p.start_depth + normrnd(0, p.position_std_dev, num_particles, 1);
+initial.z = abs(normrnd(0, p.start_depth_sigma, num_particles, 1));
 initial.u = normrnd(0, p.velocity_std_dev, num_particles, 1);
 initial.v = normrnd(0, p.velocity_std_dev, num_particles, 1);
 initial.w = p.avg_descent_veloc + normrnd(0,p.descent_std_dev,num_particles,1);

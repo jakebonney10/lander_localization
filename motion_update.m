@@ -5,43 +5,50 @@ function [state] = motion_update(state, p)
     % Start the timer
     tic
     
-    % Initialize velocity matrices
-    u = state.u;
-    v = state.v;
-    w = zeros(size(state.w));
-    
     % Descending
     idx_descending = state.mode == 0;
-    u(idx_descending) = u(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1);
-    v(idx_descending) = v(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1);
-    w(idx_descending) = p.avg_descent_veloc + normrnd(0, p.descent_std_dev, sum(idx_descending), 1);
+    state.u(idx_descending) = state.u(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1);
+    state.v(idx_descending) = state.v(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1);
+    state.w(idx_descending) = p.avg_descent_veloc + normrnd(0, p.descent_std_dev, sum(idx_descending), 1);
+    state.x(idx_descending) = state.x(idx_descending) + state.u(idx_descending)*p.delta_t;
+    state.y(idx_descending) = state.y(idx_descending) + state.v(idx_descending)*p.delta_t;
+    state.z(idx_descending) = state.z(idx_descending) + state.w(idx_descending)*p.delta_t;
+
+    % Transition to on bottom
+    idx_transition = state.z >= state.z_transition & state.mode == 0;
+    state.mode(idx_transition) = 1;
     
     % On bottom
     idx_on_bottom = state.mode == 1;
-    bottom_time = state.bottom_time;
-    bottom_time(idx_on_bottom) = bottom_time(idx_on_bottom) + p.delta_t;
-    x = state.x + normrnd(0, p.velocity_std_dev, size(state.x));
-    y = state.y + normrnd(0, p.velocity_std_dev, size(state.y));
-    z = state.z + normrnd(0, p.velocity_std_dev, size(state.z));
-    idx_transition = bottom_time > state.total_bottom_time;
-    w(idx_on_bottom & ~idx_transition) = 0 + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom & ~idx_transition), 1);
+    state.bottom_time(idx_on_bottom) = state.bottom_time(idx_on_bottom) + p.delta_t;
+    state.u(idx_on_bottom) = 0;
+    state.v(idx_on_bottom) = 0;
+    state.w(idx_on_bottom) = 0;
+    x(idx_on_bottom) = state.x(idx_on_bottom) + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom),1);
+    y(idx_on_bottom) = state.y(idx_on_bottom) + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom),1);
+    z(idx_on_bottom) = state.z(idx_on_bottom) + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom),1);
+    
+    % Transition to ascending
+    idx_transition = state.bottom_time > state.total_bottom_time & state.mode == 1;
+    state.mode(idx_transition) = 2;
     
     % Ascending
     idx_ascending = state.mode == 2;
-    u(idx_ascending) = u(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1);
-    v(idx_ascending) = v(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1);
-    w(idx_ascending) = p.avg_ascent_veloc + normrnd(0, p.descent_std_dev, sum(idx_ascending), 1);
+    state.u(idx_ascending) = state.u(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1);
+    state.v(idx_ascending) = state.v(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1);
+    state.w(idx_ascending) = p.avg_ascent_veloc + normrnd(0, p.descent_std_dev, sum(idx_ascending), 1);
+    state.x(idx_ascending) = state.x(idx_ascending) + state.u(idx_ascending)*p.delta_t;
+    state.y(idx_ascending) = state.y(idx_ascending) + state.v(idx_ascending)*p.delta_t;
+    state.z(idx_ascending) = state.z(idx_ascending) + state.w(idx_ascending)*p.delta_t;
+
     
-    % Update positions
-    state.x = state.x + u .* p.delta_t;
-    state.y = state.y + v .* p.delta_t;
-    state.z = state.z + w .* p.delta_t;
+    % Transition to surface
     
-    % Update velocities
-    state.u = u;
-    state.v = v;
-    state.w = w;
-    
+
+    % On surface
+
+
+       
     % State transitions
     idx_transition = state.z >= state.z_transition & state.mode == 0;
     state.mode(idx_transition) = 1;
