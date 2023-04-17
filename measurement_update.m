@@ -16,10 +16,6 @@ function [particle_range, weight, local_x, local_y] = measurement_update(state, 
     local_x = ship_x - origin_x;
     local_y = ship_y - origin_y;
         
-    % Display the local coordinates
-    disp(['Local x: ', num2str(local_x)]);
-    disp(['Local y: ', num2str(local_y)]);
-        
     % Define ship z position, offset of transducer hanging off ship
     local_z = 5;
     

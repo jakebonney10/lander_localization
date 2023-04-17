@@ -19,13 +19,19 @@
 
 clc, clearvars, close all
 
+%TODO: mess with scale on figure
+%TODO: try another dive
+%TODO: Post processed version with known depth
+
 %%%%% USER INPUTS
-ocean_depth = 8375;             % approximate ocean depth known before deployment (m) 
-ocean_depth_sigma = 20;         % for particle transition to bottom (level of confidence of bottom)
-num_particles = 1e5;         % num of particles to use in estimation
-total_bottom_time = 3600*4;     % seconds lander is programmed to sit on the bottom
-total_bottom_time_sigma = 60*5; % variation in minutes for total bottom time
-use_range_correction = 0;       % Set to 1 to use range correction with ssp
+burnwire_time = 60*5;
+ocean_depth = 8375;               % approximate ocean depth known before deployment (m) 
+ocean_depth_percent_error = 0.01;       % confidence in bottom estimate (1%)
+ocean_depth_sigma = ocean_depth * ocean_depth_percent_error;        % for particle transition to bottom (level of confidence of bottom)
+num_particles = 1e5;            % num of particles to use in estimation
+total_bottom_time = 3600*4 + burnwire_time;     % seconds lander is programmed to sit on the bottom
+total_bottom_time_sigma = 60*5;         % variation in minutes for total bottom time
+use_range_correction = 1;       % Set to 1 to use range correction with ssp
 
 %%%%% IMMUTABLE PARAMETERS
 
@@ -49,22 +55,23 @@ p.t_max = 1e8;         % in seconds, maximum time to run the simulation
 p.delta_t = 1;        % in seconds, time step as we move through the simulation
 
 % Knowns
-p.sound_speed = 1500; % (m/s) constant for now, will need this for range measurement later
 p.ocean_depth = ocean_depth; % approximate ocean depth known before deployment (m) 
-p.ocean_depth_sigma = ocean_depth_sigma; % used for the probability of particles landing on the seafloor
 p.total_bottom_time = total_bottom_time; % estimated total bottom time in seconds
-p.total_bottom_time_sigma = total_bottom_time_sigma;
 p.avg_descent_veloc = 1.1; % descent velocity (m/s) 60 (m/min)
 p.avg_ascent_veloc = -1.1; % ascent velocity (m/s) 60 (m/min)
 p.num_particles = num_particles;
 
 % Uncertainties
-p.descent_std_dev = 0.25; % (m/s)
-p.position_std_dev = 100; % (m)
-p.velocity_std_dev = 0.01; % (m/s)
+p.descent_std_dev = 0.001; % (m/s)
+p.position_std_dev = 25; % (m)
+p.velocity_std_dev = 0.001; % (m/s)
 p.start_depth_sigma = 25; % (m)
 p.on_bottom_position_sigma = 1; % (m)
-p.measurement_sigma = 10; % for particle weighting (m) 
+p.total_bottom_time_sigma = total_bottom_time_sigma; % used for probability of transition time bottom 
+p.ocean_depth_sigma = ocean_depth_sigma; % used for the probability of particles landing on the seafloor
+p.measurement_sigma = 20; % for particle weighting (m) 
+
+
 
 %%%%% OTHER PARAMETERS
 
@@ -196,11 +203,14 @@ fprintf('The estimated position is x = %.2f, y = %.2f, z = %.2f\n',final_particl
 csv_fn = 'lander_iridium_sept2018.csv';
 [local_x, local_y, surface_t] = ground_truth(csv_fn, p);
 
-% Plot final point cloud top down view
+%% Plot final point cloud top down view
 figure
 scatter(state.x,state.y,'b.'); hold on
 plot(local_x, local_y, 'ro'); hold on
+plot(final_particle_pose_x, final_particle_pose_y, 'y^')
+plot(median(state.x), median(state.y), 'g*')
 axis equal
+legend('Point Cloud', 'True Position', 'Mean Position', 'Median Position')
 
 %%%%% implement density solution here
 

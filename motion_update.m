@@ -8,9 +8,9 @@ function [state] = motion_update(state, p)
     %%%% MODE 0: DESCENDING
     % Descending Motion Model
     idx_descending = state.mode == 0;
-    state.u(idx_descending) = state.u(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1);
-    state.v(idx_descending) = state.v(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1);
-    state.w(idx_descending) = p.avg_descent_veloc + normrnd(0, p.descent_std_dev, sum(idx_descending), 1);
+    state.u(idx_descending) = state.u(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1)*p.delta_t; 
+    state.v(idx_descending) = state.v(idx_descending) + normrnd(0, p.velocity_std_dev, sum(idx_descending), 1)*p.delta_t;
+    state.w(idx_descending) = state.w(idx_descending) + normrnd(0, p.descent_std_dev, sum(idx_descending), 1)*p.delta_t;
     state.x(idx_descending) = state.x(idx_descending) + state.u(idx_descending)*p.delta_t;
     state.y(idx_descending) = state.y(idx_descending) + state.v(idx_descending)*p.delta_t;
     state.z(idx_descending) = state.z(idx_descending) + state.w(idx_descending)*p.delta_t;
@@ -27,28 +27,28 @@ function [state] = motion_update(state, p)
     state.u(idx_on_bottom) = 0;
     state.v(idx_on_bottom) = 0; % set velocities to zero on bottom
     state.w(idx_on_bottom) = 0;
-    state.x(idx_on_bottom) = state.x(idx_on_bottom) + normrnd(0, p.on_bottom_position_sigma, sum(idx_on_bottom),1);
-    state.y(idx_on_bottom) = state.y(idx_on_bottom) + normrnd(0, p.on_bottom_position_sigma, sum(idx_on_bottom),1);
-    state.z(idx_on_bottom) = state.z(idx_on_bottom) + normrnd(0, p.on_bottom_position_sigma, sum(idx_on_bottom),1);
+    state.x(idx_on_bottom) = state.x(idx_on_bottom) + normrnd(0, p.on_bottom_position_sigma, sum(idx_on_bottom),1)*p.delta_t;
+    state.y(idx_on_bottom) = state.y(idx_on_bottom) + normrnd(0, p.on_bottom_position_sigma, sum(idx_on_bottom),1)*p.delta_t;
+    state.z(idx_on_bottom) = state.z(idx_on_bottom) + normrnd(0, p.on_bottom_position_sigma, sum(idx_on_bottom),1)*p.delta_t;
 
     % Transition from On Bottom to Ascending
     idx_1_to_2 = (state.bottom_time > state.total_bottom_time & state.mode == 1);
+    state.w(idx_1_to_2) = p.avg_ascent_veloc;
     state.mode(idx_1_to_2) = 2;
 
 
     %%%% MODE 2: ASCENDING
     % Ascending Motion Model
     idx_ascending = (state.mode == 2);
-    state.u(idx_ascending) = state.u(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1);
-    state.v(idx_ascending) = state.v(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1);
-                                                            %p.ascent_std_dev? rename this param maybe
-    state.w(idx_ascending) = p.avg_ascent_veloc + normrnd(0, p.descent_std_dev, sum(idx_ascending), 1);
+    state.u(idx_ascending) = state.u(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1)*p.delta_t;
+    state.v(idx_ascending) = state.v(idx_ascending) + normrnd(0, p.velocity_std_dev, sum(idx_ascending), 1)*p.delta_t;
+    state.w(idx_ascending) = state.w(idx_ascending) + normrnd(0, p.descent_std_dev, sum(idx_ascending), 1)*p.delta_t;
     state.x(idx_ascending) = state.x(idx_ascending) + state.u(idx_ascending)*p.delta_t;
     state.y(idx_ascending) = state.y(idx_ascending) + state.v(idx_ascending)*p.delta_t;
     state.z(idx_ascending) = state.z(idx_ascending) + state.w(idx_ascending)*p.delta_t;
     
     % Transition to surface
-    idx_2_to_3 = (state.z <= 0 & state.mode == 2); % what is our threshold for the surface?
+    idx_2_to_3 = (state.z <= 3 & state.mode == 2); % threshold for the surface is 3 meters
     state.mode(idx_2_to_3) = 3;
     
 
