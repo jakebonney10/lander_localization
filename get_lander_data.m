@@ -1,4 +1,4 @@
-function [ship, measurement, lander] = get_lander_data(fn_topside, fn_lander)
+function [ship, measurement, lander, ssp] = get_lander_data(fn_topside, fn_lander)
 % lander_data 
 % Bonney and Parisi
 % GOAL: Load lander data (lat, lon, range, depth) for particle filter localization.
@@ -20,5 +20,12 @@ measurement.timestamp = measurement.timestamp(idx);
 
 lander.depth = lander_mission_state_t_MIS_STATE.depth;
 lander.timestamp = double(lander_mission_state_t_MIS_STATE.timestamp)/1e6;
+lander.state = lander_mission_state_t_MIS_STATE.state;
+
+% Load SSP info
+ssp.pres_db = sbe9_data_t_SBE9_DATA.pres - 10.1325;
+ssp.temp_its90 = sbe9_data_t_SBE9_DATA.temp;
+ssp.sal_psu = sbe9_data_t_SBE9_DATA.sal;
+ssp.ctd_t = double(sbe9_data_t_SBE9_DATA.timestamp);
 
 end
