@@ -24,7 +24,7 @@ function [particle_range, weight, local_x, local_y] = measurement_update(state, 
     local_z = 5;
     
     % Gaussian params
-    sigma = 50; % set the standard deviation of the Gaussian distribution
+    sigma = p.measurement_sigma; % set the standard deviation of the Gaussian distribution
     mu = range;  % set mu to be the true range, we want particles that are
     % closer to the true range to have higher weights than those farther away.
     

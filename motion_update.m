@@ -27,10 +27,9 @@ function [state] = motion_update(state, p)
     state.u(idx_on_bottom) = 0;
     state.v(idx_on_bottom) = 0; % set velocities to zero on bottom
     state.w(idx_on_bottom) = 0;
-    state.x(idx_on_bottom) = state.x(idx_on_bottom) + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom),1);
-    state.y(idx_on_bottom) = state.y(idx_on_bottom) + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom),1);
-    state.z(idx_on_bottom) = state.z(idx_on_bottom) + normrnd(0, p.velocity_std_dev, sum(idx_on_bottom),1);
-    % TO DO: UPDATE THE p.velocity_std_dev to a p.on_bottom_position_sigma
+    state.x(idx_on_bottom) = state.x(idx_on_bottom) + normrnd(0, p.on_bottom_position_sigma, sum(idx_on_bottom),1);
+    state.y(idx_on_bottom) = state.y(idx_on_bottom) + normrnd(0, p.on_bottom_position_sigma, sum(idx_on_bottom),1);
+    state.z(idx_on_bottom) = state.z(idx_on_bottom) + normrnd(0, p.on_bottom_position_sigma, sum(idx_on_bottom),1);
 
     % Transition from On Bottom to Ascending
     idx_1_to_2 = (state.bottom_time > state.total_bottom_time & state.mode == 1);

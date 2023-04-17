@@ -21,11 +21,11 @@ clc, clearvars, close all
 
 %%%%% USER INPUTS
 ocean_depth = 8375;             % approximate ocean depth known before deployment (m) 
-ocean_depth_sigma = 10;         % for particle transition to bottom (level of confidence of bottom)
-num_particles = 100000;         % num of particles to use in estimation
+ocean_depth_sigma = 20;         % for particle transition to bottom (level of confidence of bottom)
+num_particles = 1e5;         % num of particles to use in estimation
 total_bottom_time = 3600*4;     % seconds lander is programmed to sit on the bottom
 total_bottom_time_sigma = 60*5; % variation in minutes for total bottom time
-use_range_correction = 1;       % Set to 1 to use range correction with ssp
+use_range_correction = 0;       % Set to 1 to use range correction with ssp
 
 %%%%% IMMUTABLE PARAMETERS
 
@@ -63,6 +63,8 @@ p.descent_std_dev = 0.25; % (m/s)
 p.position_std_dev = 100; % (m)
 p.velocity_std_dev = 0.01; % (m/s)
 p.start_depth_sigma = 25; % (m)
+p.on_bottom_position_sigma = 1; % (m)
+p.measurement_sigma = 10; % for particle weighting (m) 
 
 %%%%% OTHER PARAMETERS
 
@@ -190,10 +192,25 @@ final_particle_pose_y = mean(state.y);
 final_particle_pose_z = mean(state.z);
 fprintf('The estimated position is x = %.2f, y = %.2f, z = %.2f\n',final_particle_pose_x, final_particle_pose_y, final_particle_pose_z)
 
-
 %%%%% Ground truth
 csv_fn = 'lander_iridium_sept2018.csv';
 [local_x, local_y, surface_t] = ground_truth(csv_fn, p);
+
+% Plot final point cloud top down view
+figure
+scatter(state.x,state.y,'b.'); hold on
+plot(local_x, local_y, 'ro'); hold on
+axis equal
+
+%%%%% implement density solution here
+
+
+
+
+
+
+
+%%%%%
 
 % close video
 close(writerObj)
