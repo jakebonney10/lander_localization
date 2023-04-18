@@ -202,7 +202,14 @@ end
 
 %%
 %%%%% OUTPUTS
-clc
+clc, close all
+
+% add path variables to access file + functions
+if ispc() % windows
+    addpath("gsw_matlab_v3_06_16\","latlonutm\")
+else      % mac, ubuntu
+    addpath("gsw_matlab_v3_06_16/","latlonutm/")
+end
 
 disp('simulation ended!')
 final_particle_pose_x = mean(state.x);
@@ -218,7 +225,7 @@ fprintf(' The distance between the ground truth and estimate is %.2f meters\n',d
 
 
 % Plot final point cloud top down view
-figure
+figure(1)
 scatter(state.x,state.y,'b.'); hold on
 plot(local_x, local_y, 'ro'); hold on
 plot(final_particle_pose_x, final_particle_pose_y, 'y^')
@@ -230,7 +237,7 @@ axis equal
 %%%%% implement density solution here
 
 % generate meshgrid
-grid_size = 50;
+grid_size = 20;
 n = length(state.x);
 
 x_edges = linspace(min(state.x),max(state.x),grid_size);
@@ -255,12 +262,12 @@ prob_map.Y = Y_new;
 prob_map.Z = counts/n;  % 'probability' in z
 
 % surface plot
-figure()
+figure(2)
 surf(prob_map.X, prob_map.Y, prob_map.Z)
 xlabel('x'),ylabel('y'),zlabel('probability')
 
 % heat map
-figure()
+figure(3)
 imagesc(prob_map.X(1,:), prob_map.Y(:,1)', prob_map.Z)
 set(gca, 'YDir', 'normal');
 xlabel('x'),ylabel('y')
@@ -277,7 +284,8 @@ prob_map.max_x = prob_map.X(1,max_col);
 fprintf('Max x is %0.3f, max y is %0.3f\n', prob_map.max_x, prob_map.max_y)
 
 
-
+figure(1)
+plot(prob_map.max_x, prob_map.max_y,'ws')
 
 
 %%%%%
