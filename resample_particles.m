@@ -1,6 +1,8 @@
 function state = resample_particles(state)
-% stoachsatic universal resampling (SUR) for particles based off their weights
+% stochastic universal resampling (SUR) for particles based off their weights
 
+% Start the timer
+tic
 
 % Compute cumulative sum of particle weights
 w_cumulative = cumsum(state.weight);
@@ -13,7 +15,7 @@ extractions = 1/(2*n):1/n:(2*n-1)/(2*n); % where we pull indices from on the cum
 indices = zeros(length(state.weight), 1);
 
 % Loop over all particles, find the index in the cumsum closest to our extraction values
-for i = 1:n             % to go thru extractions
+parfor i = 1:n             % to go thru extractions
     for j = 1:n         % to go thru w_cumulative
         if (w_cumulative(j)> extractions(i)) % criteria to select a particle to live on
             indices(i) = j; % save the particle index we want to include
@@ -39,5 +41,10 @@ state.bottom_time = state.bottom_time(indices);
 % reset particle weights to uniform values
 state.weight = ones(length(state.weight), 1) / length(state.weight); 
 
+% Stop the timer and record the elapsed time
+elapsed_time = toc;
+
+disp('The elapsed time for resampling is: ')
+disp(elapsed_time)
 
 end
