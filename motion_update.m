@@ -48,7 +48,7 @@ function [state] = motion_update(state, p)
     state.z(idx_ascending) = state.z(idx_ascending) + state.w(idx_ascending)*p.delta_t;
     
     % Transition to surface
-    idx_2_to_3 = (state.z <= 3 & state.mode == 2); % threshold for the surface is 3 meters
+    idx_2_to_3 = (state.z <= 0 & state.mode == 2); % what is our threshold for the surface?
     state.mode(idx_2_to_3) = 3;
     
 
