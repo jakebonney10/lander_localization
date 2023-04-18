@@ -21,7 +21,6 @@ clc, clearvars, close all
 
 %TODO: mess with scale on figure
 %TODO: try another dive
-%TODO: Post processed version with known depth
 
 %%%%% USER INPUTS
 burnwire_time = 60*5;
