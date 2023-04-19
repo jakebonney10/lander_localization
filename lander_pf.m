@@ -110,7 +110,15 @@ state.finished_particles = 0;
 
 % Plot initial particle state
 f1 = figure;
+scatter3(state.x, state.y, state.z,'r.')
+set(gca, 'ZDir', 'reverse');
+axis equal
+title('Initial Particle Position')
+xlabel('x position (m)')
+ylabel('y position (m)')
+zlabel('depth (m)')
 
+%%
 % Get the screen size
 screen_size = get(groot, 'ScreenSize');
 
