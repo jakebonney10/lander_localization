@@ -23,13 +23,11 @@ clc, clearvars, close all
 %TODO: try another dive
 
 %%%%% USER INPUTS
-burnwire_time = 60*5;
 ocean_depth = 8375;               % approximate ocean depth known before deployment (m) 
 ocean_depth_percent_error = 0.01;       % confidence in bottom estimate (1%)
-ocean_depth_sigma = ocean_depth * ocean_depth_percent_error;        % for particle transition to bottom (level of confidence of bottom)
 num_particles = 1e5;            % num of particles to use in estimation
+burnwire_time = 60*5;           % seconds it takes for burnwire to corrode
 total_bottom_time = 3600*1/6 + burnwire_time;     % seconds lander is programmed to sit on the bottom
-total_bottom_time_sigma = 60*5;         % variation in minutes for total bottom time
 use_range_correction = 0;       % Set to 1 to use range correction with ssp
 use_lander_depth = 0;           % Set to 1 to use lander depth post processed solution
 
@@ -67,30 +65,29 @@ p.position_std_dev = 15; % (m)
 p.velocity_std_dev = 0.001; % (m/s)
 p.start_depth_sigma = 25; % (m)
 p.on_bottom_position_sigma = 0.5; % (m)
-p.total_bottom_time_sigma = total_bottom_time_sigma; % used for probability of transition time bottom 
-p.ocean_depth_sigma = ocean_depth_sigma; % used for the probability of particles landing on the seafloor
+p.total_bottom_time_sigma = 60*5; % variation in minutes used for probability of transition time bottom 
+p.ocean_depth_sigma = ocean_depth * ocean_depth_percent_error; % for particle transition to bottom (level of confidence of bottom)
 p.measurement_sigma = 20; % for particle weighting (m) 
-
 
 
 %%%%% OTHER PARAMETERS
 
 % Initial State
-ship_x = 0; % Ship latitude at launch
-ship_y = 0; % Ship longitude at launch
+ship_x = 0; % Ship origin x at launch
+ship_y = 0; % Ship origin y at launch
 
 
 %%%%% INITIALIZE PARTICLES
 
-initial.x = ship_x + normrnd(0, p.position_std_dev, num_particles, 1);
-initial.y = ship_y + normrnd(0, p.position_std_dev, num_particles, 1);
-initial.z = abs(normrnd(0, p.start_depth_sigma, num_particles, 1));
-initial.u = normrnd(0, p.velocity_std_dev, num_particles, 1);
-initial.v = normrnd(0, p.velocity_std_dev, num_particles, 1);
-initial.w = p.avg_descent_veloc + normrnd(0,p.descent_std_dev,num_particles,1);
+initial.x = ship_x + normrnd(0, p.position_std_dev, p.num_particles, 1);
+initial.y = ship_y + normrnd(0, p.position_std_dev, p.num_particles, 1);
+initial.z = abs(normrnd(0, p.start_depth_sigma, p.num_particles, 1));
+initial.u = normrnd(0, p.velocity_std_dev, p.num_particles, 1);
+initial.v = normrnd(0, p.velocity_std_dev, p.num_particles, 1);
+initial.w = p.avg_descent_veloc + normrnd(0,p.descent_std_dev,p.num_particles,1);
 
-initial.z_transition = normrnd(ocean_depth,ocean_depth_sigma,num_particles,1);
-initial.total_bottom_time = normrnd(p.total_bottom_time,p.total_bottom_time_sigma,num_particles,1);
+initial.z_transition = normrnd(ocean_depth,p.ocean_depth_sigma,p.num_particles,1);
+initial.total_bottom_time = normrnd(p.total_bottom_time,p.total_bottom_time_sigma,p.num_particles,1);
 initial.mode = zeros(p.num_particles, 1); % descending, on bottom, ascending, on surface
 initial.bottom_time = zeros(p.num_particles, 1);
 
