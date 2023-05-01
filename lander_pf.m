@@ -1,5 +1,6 @@
 % lander_pf script
 % Bonney and Parisi
+clc, clearvars, close all
 
 % GOAL: Initialize particles for particle filter localization and perform 
 % motion update step for each particle.
@@ -12,12 +13,13 @@
 
 % add path variables to access file + functions
     if ispc() % windows
-        addpath("gsw_matlab_v3_06_16\","latlonutm\")
-    else      % mac, ubuntu
-        addpath("gsw_matlab_v3_06_16/","latlonutm/")
+        addpath(genpath('functions'),genpath('data'))
+        vid_folder = "video\";
+    else      % mac, ubuntu [not sure how genpath works on ubuntu and mac yet!]
+        addpath(genpath('functions'),genpath('data'))
+        vid_folder = "video/";
     end
 
-clc, clearvars, close all
 
 %TODO: mess with scale on figure
 %TODO: try another dive
@@ -106,7 +108,7 @@ state.total_bottom_time = initial.total_bottom_time;
 state.finished_particles = 0;
 
 % Plot initial particle state
-f1 = figure;
+f1 = figure(1);
 scatter3(state.x, state.y, state.z,'r.')
 set(gca, 'ZDir', 'reverse');
 axis equal
@@ -115,7 +117,11 @@ xlabel('x position (m)')
 ylabel('y position (m)')
 zlabel('depth (m)')
 
+disp('observe initial cloud. run next code section to start particle filter.')
+
 %%
+disp('...starting particle filter...')
+
 % Get the screen size
 screen_size = get(groot, 'ScreenSize');
 
@@ -123,7 +129,8 @@ screen_size = get(groot, 'ScreenSize');
 set(gcf, 'Position', screen_size);
 
 %%%% RECORD FRAMES FOR A VIDEO
-writerObj = VideoWriter(datestr(datetime('now'), 'yyyymmddHHMMSS'),'Motion JPEG AVI');
+video_name = strcat(vid_folder,datestr(datetime('now'), 'yyyymmddHHMMSS'));
+writerObj = VideoWriter(video_name,'Motion JPEG AVI');
 writerObj.FrameRate = 1;
 open(writerObj);
 
@@ -156,7 +163,8 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
         disp("updating with range measurement")
         [particle_range, state.weight, ship_x, ship_y] = measurement_update(state, p, ship, range, t);
 
-        % Pause and visualize 
+        % Pause and visualize
+        figure(f1)
         plot3(state.x,state.y,state.z,'r.'), hold on
 
         % resample particles
@@ -204,6 +212,8 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     end
 
 end
+
+disp('particle filter has ended! run next section for plot and to save the video.')
 
 %%
 %%%%% OUTPUTS

@@ -2,3 +2,7 @@
 *.asv
 *.00
 *.hex
+
+# prevent all the videos being pushed (for mac/ubuntu and win OS)
+video\*.avi
+video/*.avi
