@@ -34,7 +34,7 @@ use_range_correction = 0;       % Set to 1 to use range correction with ssp
 use_lander_depth = 0;           % Set to 1 to use lander depth post processed solution
 use_lost_lander = [0 1000];     % Set to 1 if running lost lander problem and change radius (m)
 
-%%
+
 %%%%% IMMUTABLE PARAMETERS
 
 % Load & plot lander data
@@ -66,9 +66,10 @@ p.num_particles = num_particles;
 % Uncertainties
 p.descent_std_dev = 0.001; % (m/s)
 p.position_std_dev = 15; % (m)
-p.velocity_std_dev = 0.001; % (m/s)
+p.velocity_std_dev_surface = 0.001; % (m/s)
+p.velocity_std_dev = p.velocity_std_dev_surface; % (m/s)
 p.start_depth_sigma = 25; % (m)
-p.on_bottom_position_sigma = 0.5; % (m)
+p.on_bottom_position_sigma = 0.25; % (m)
 p.total_bottom_time_sigma = 60*5; % variation in minutes used for probability of transition time bottom 
 p.ocean_depth_sigma = ocean_depth * ocean_depth_percent_error; % for particle transition to bottom (level of confidence of bottom)
 p.measurement_sigma = 20; % for particle weighting (m) 
@@ -97,7 +98,7 @@ initial.bottom_time = zeros(p.num_particles, 1);
 
 % Lost lander problem
 if use_lost_lander(1) == 1
-    [initial.x, initial.y, initial.z] = lost_lander(p.num_particles, use_lost_lander(2));
+    [initial.x, initial.y, initial.z] = lost_lander(p, use_lost_lander(2));
 end
 
 % define State (hold all particles)
@@ -123,7 +124,6 @@ title('Initial Particle Position')
 xlabel('x position (m)')
 ylabel('y position (m)')
 zlabel('depth (m)')
-
 disp('observe initial cloud. run next code section to start particle filter.')
 
 %%
@@ -149,6 +149,9 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
 
     % motion update (update all states)
     state = motion_update(state,p);
+
+    % varying horizontal velocity implementation
+    %p.velocity_std_dev = set_velocity_uncertainty(p, mean(state.z))
 
     % Lander depth post processed solution
     if use_lander_depth == 1
