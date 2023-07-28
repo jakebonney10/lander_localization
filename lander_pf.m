@@ -32,7 +32,9 @@ burnwire_time = 60*5;           % seconds it takes for burnwire to corrode
 total_bottom_time = 3600*1/6 + burnwire_time;     % seconds lander is programmed to sit on the bottom
 use_range_correction = 0;       % Set to 1 to use range correction with ssp
 use_lander_depth = 0;           % Set to 1 to use lander depth post processed solution
+use_lost_lander = [0 1000];     % Set to 1 if running lost lander problem and change radius (m)
 
+%%
 %%%%% IMMUTABLE PARAMETERS
 
 % Load & plot lander data
@@ -92,6 +94,11 @@ initial.z_transition = normrnd(ocean_depth,p.ocean_depth_sigma,p.num_particles,1
 initial.total_bottom_time = normrnd(p.total_bottom_time,p.total_bottom_time_sigma,p.num_particles,1);
 initial.mode = zeros(p.num_particles, 1); % descending, on bottom, ascending, on surface
 initial.bottom_time = zeros(p.num_particles, 1);
+
+% Lost lander problem
+if use_lost_lander(1) == 1
+    [initial.x, initial.y, initial.z] = lost_lander(p.num_particles, use_lost_lander(2));
+end
 
 % define State (hold all particles)
 state = struct('x', [], 'y', [], 'z', [], 'u', [], 'v', [], 'w', [], 'weight', [], 'mode', [], 'bottom_time', [], 'total_bottom_time', [], 'finished_particles', []);

@@ -1,4 +1,4 @@
-function [x,y,z] = wheres_waldo(p, radius, z)
+function [x,y,z] = lost_lander(p, radius)
 % The "oh shit" we forgot to mark where we put the lander function.
 % Initializes a random particle cloud with x,y radius and z depth. 
 
