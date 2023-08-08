@@ -179,7 +179,7 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
 
         % resample particles
         disp("resampling particles")
-        state = resample_particles(state);
+        state = resample_particles(state,p);
 
         % Pause and visualize 
         plot3(state.x,state.y,state.z,'k.'), hold on
