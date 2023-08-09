@@ -195,7 +195,7 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
         axis equal;
         set(gca, 'ZDir', 'reverse');
         hold off
-        title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),')');
+        title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),',u=',num2str(mean(state.u)),',v=',num2str(mean(state.v)),',w=',num2str(mean(state.w)),')');
         title(title_str,'fontsize',8) 
         pause(1)
     
