@@ -21,8 +21,12 @@ clc, clearvars, close all
     end
 
 
-%TODO: mess with scale on figure
-%TODO: try another dive
+% Load & plot lander data
+fn_topside = '20180920_154902.mat'; % topside .mat filename (smaller file)
+fn_lander = '20180920_155058.mat'; % lander .mat filename (bigger file)
+[ship, measurement, lander, ssp] = get_lander_data(fn_topside, fn_lander);
+
+%% Particle Filter Setup
 
 %%%%% USER INPUTS
 ocean_depth = 8375;               % approximate ocean depth known before deployment (m) 
@@ -37,10 +41,6 @@ use_lost_lander = [0 1000];     % Set to 1 if running lost lander problem and ch
 
 %%%%% IMMUTABLE PARAMETERS
 
-% Load & plot lander data
-fn_topside = '20180920_154902.mat'; % topside .mat filename (smaller file)
-fn_lander = '20180920_155058.mat'; % lander .mat filename (bigger file)
-[ship, measurement, lander, ssp] = get_lander_data(fn_topside, fn_lander);
 
 % SSP range correction
 if use_range_correction == 1
@@ -126,7 +126,7 @@ ylabel('y position (m)')
 zlabel('depth (m)')
 disp('observe initial cloud. run next code section to start particle filter.')
 
-%%
+%% Main pf loop 
 disp('...starting particle filter...')
 
 % Get the screen size
