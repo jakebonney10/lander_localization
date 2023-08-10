@@ -21,15 +21,25 @@ clc, clearvars, close all
     end
 
 
-%TODO: mess with scale on figure
-%TODO: try another dive
+% Load & plot lander data
+fn_topside = '20180920_155058.mat'; % topside .mat filename (smaller file)
+fn_lander = '20180920_154902.mat'; % lander .mat filename (bigger file)
+[ship, measurement, lander, ssp] = get_lander_data(fn_topside, fn_lander);
+
+lander_on_bottom_start_idx = find(lander.depth > max(lander.depth)-5,1);
+lander_on_bottom_finish_idx = find(lander.depth > max(lander.depth)-5,1,"last");
+total_bottom_time = (lander.timestamp(lander_on_bottom_finish_idx)-lander.timestamp(lander_on_bottom_start_idx))/3600 % hours
+max_depth = max(lander.depth) % meters
+last_range_measurment = measurement.range(end) % meters
+
+%% Particle Filter Setup
 
 %%%%% USER INPUTS
 ocean_depth = 8375;               % approximate ocean depth known before deployment (m) 
 ocean_depth_percent_error = 0.01;       % confidence in bottom estimate (1%)
 num_particles = 1e5;            % num of particles to use in estimation
 burnwire_time = 60*5;           % seconds it takes for burnwire to corrode
-total_bottom_time = 3600*1/6 + burnwire_time;     % seconds lander is programmed to sit on the bottom
+total_bottom_time = 3600*(1/12) + burnwire_time;     % seconds lander is programmed to sit on the bottom
 use_range_correction = 0;       % Set to 1 to use range correction with ssp
 use_lander_depth = 0;           % Set to 1 to use lander depth post processed solution
 use_lost_lander = [0 1000];     % Set to 1 if running lost lander problem and change radius (m)
@@ -37,10 +47,6 @@ use_lost_lander = [0 1000];     % Set to 1 if running lost lander problem and ch
 
 %%%%% IMMUTABLE PARAMETERS
 
-% Load & plot lander data
-fn_topside = '20180920_154902.mat'; % topside .mat filename (smaller file)
-fn_lander = '20180920_155058.mat'; % lander .mat filename (bigger file)
-[ship, measurement, lander, ssp] = get_lander_data(fn_topside, fn_lander);
 
 % SSP range correction
 if use_range_correction == 1
@@ -64,11 +70,11 @@ p.avg_ascent_veloc = -1.1; % ascent velocity (m/s) 60 (m/min)
 p.num_particles = num_particles;
 
 % Uncertainties
-p.descent_std_dev = 0.001; % (m/s)
+p.descent_std_dev = 0.002; % (m/s)
 p.position_std_dev = 15; % (m)
-p.velocity_std_dev_surface = 0.001; % (m/s)
+p.velocity_std_dev_surface = 0.005; % (m/s)
 p.velocity_std_dev = p.velocity_std_dev_surface; % (m/s)
-p.start_depth_sigma = 25; % (m)
+p.start_depth_sigma = 50; % (m)
 p.on_bottom_position_sigma = 0.25; % (m)
 p.total_bottom_time_sigma = 60*5; % variation in minutes used for probability of transition time bottom 
 p.ocean_depth_sigma = ocean_depth * ocean_depth_percent_error; % for particle transition to bottom (level of confidence of bottom)
@@ -126,7 +132,7 @@ ylabel('y position (m)')
 zlabel('depth (m)')
 disp('observe initial cloud. run next code section to start particle filter.')
 
-%%
+%% Main pf loop 
 disp('...starting particle filter...')
 
 % Get the screen size
@@ -168,9 +174,10 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     [range, range_t] = get_range_measurement(measurement, t, p.delta_t/2);
 
     % if we have a range measurement
-    if ~isempty(range)
+    if ~isempty(range) && ~(mean(state.z) < 600 && min(state.mode) >= 2)
         % measurement update
         disp("updating with range measurement")
+        
         [particle_range, state.weight, ship_x, ship_y] = measurement_update(state, p, ship, range, t);
 
         % Pause and visualize
@@ -195,7 +202,7 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
         axis equal;
         set(gca, 'ZDir', 'reverse');
         hold off
-        title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),')');
+        title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),',u=',num2str(mean(state.u)),',v=',num2str(mean(state.v)),',w=',num2str(mean(state.w)),')');
         title(title_str,'fontsize',8) 
         pause(1)
     
@@ -215,9 +222,9 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
 %     master_particle.w(t) = mean(state.w);
 
 
-    % kill sim for any reason
-    if state.finished_particles == p.num_particles
-        disp('all particles at surface!')
+    % kill sim if 95% of particles are finished
+    if state.finished_particles > p.num_particles*0.95 
+        disp('all particles at surface! or particle depth < 600 meters!')
         break
     end
 
