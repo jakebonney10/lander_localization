@@ -1,7 +1,7 @@
 % lander_pf script
 % Bonney and Parisi
 clc, clearvars, close all
-rng('shuffle')
+
 % GOAL: Initialize particles for particle filter localization and perform 
 % motion update step for each particle.
 
@@ -21,15 +21,25 @@ rng('shuffle')
     end
 
 
-%TODO: mess with scale on figure
-%TODO: try another dive
+% Load & plot lander data
+fn_topside = '20180921_110812.mat'; % topside .mat filename (smaller file)
+fn_lander = '20180921_110738.mat'; % lander .mat filename (bigger file)
+[ship, measurement, lander, ssp] = get_lander_data(fn_topside, fn_lander);
+
+lander_on_bottom_start_idx = find(lander.depth > max(lander.depth)-5,1);
+lander_on_bottom_finish_idx = find(lander.depth > max(lander.depth)-5,1,"last");
+total_bottom_time = (lander.timestamp(lander_on_bottom_finish_idx)-lander.timestamp(lander_on_bottom_start_idx))/3600 % hours
+max_depth = max(lander.depth) % meters
+last_range_measurment = measurement.range(end) % meters
+
+%% Particle Filter Setup
 
 %%%%% USER INPUTS
-ocean_depth = 2500;               % approximate ocean depth known before deployment (m) 
-ocean_depth_percent_error = 0.05;       % confidence in bottom estimate (1%)
+ocean_depth = 8400;               % approximate ocean depth known before deployment (m) 
+ocean_depth_percent_error = 0.01;       % confidence in bottom estimate (1%)
 num_particles = 1e5;            % num of particles to use in estimation
 burnwire_time = 60*5;           % seconds it takes for burnwire to corrode
-total_bottom_time = 30*60 + burnwire_time;     % seconds lander is programmed to sit on the bottom
+total_bottom_time = 245*60 + burnwire_time;     % seconds lander is programmed to sit on the bottom
 use_range_correction = 0;       % Set to 1 to use range correction with ssp
 use_lander_depth = 0;           % Set to 1 to use lander depth post processed solution
 use_lost_lander = [0 1000];     % Set to 1 if running lost lander problem and change radius (m)
@@ -37,10 +47,6 @@ use_lost_lander = [0 1000];     % Set to 1 if running lost lander problem and ch
 
 %%%%% IMMUTABLE PARAMETERS
 
-% Load & plot lander data
-fn_topside = '20180915_121852.mat'; % topside .mat filename (smaller file)
-fn_lander = '20180915_121737.mat'; % lander .mat filename (bigger file)
-[ship, measurement, lander, ssp] = get_lander_data(fn_topside, fn_lander);
 
 % SSP range correction
 if use_range_correction == 1
@@ -64,11 +70,11 @@ p.avg_ascent_veloc = -1.1; % ascent velocity (m/s) 60 (m/min)
 p.num_particles = num_particles;
 
 % Uncertainties
-p.descent_std_dev = 0.001; % (m/s)
+p.descent_std_dev = 0.002; % (m/s)
 p.position_std_dev = 15; % (m)
-p.velocity_std_dev_surface = 0.001; % (m/s)
+p.velocity_std_dev_surface = 0.005; % (m/s)
 p.velocity_std_dev = p.velocity_std_dev_surface; % (m/s)
-p.start_depth_sigma = 25; % (m)
+p.start_depth_sigma = 50; % (m)
 p.on_bottom_position_sigma = 0.25; % (m)
 p.total_bottom_time_sigma = 60*5; % variation in minutes used for probability of transition time bottom 
 p.ocean_depth_sigma = ocean_depth * ocean_depth_percent_error; % for particle transition to bottom (level of confidence of bottom)
@@ -126,20 +132,20 @@ ylabel('y position (m)')
 zlabel('depth (m)')
 disp('observe initial cloud. run next code section to start particle filter.')
 
-%%
+%% Main pf loop 
 disp('...starting particle filter...')
-total_timer = tic; 
+
 % Get the screen size
-%screen_size = get(groot, 'ScreenSize');
+screen_size = get(groot, 'ScreenSize');
 
 % Set the figure window size to the screen size
-%set(gcf, 'Position', screen_size);
+set(gcf, 'Position', screen_size);
 
 %%%% RECORD FRAMES FOR A VIDEO
-%video_name = strcat(vid_folder,datestr(datetime('now'), 'yyyymmddHHMMSS'));
-%writerObj = VideoWriter(video_name,'Motion JPEG AVI');
-%writerObj.FrameRate = 1;
-%open(writerObj);
+video_name = strcat(vid_folder,datestr(datetime('now'), 'yyyymmddHHMMSS'));
+writerObj = VideoWriter(video_name,'Motion JPEG AVI');
+writerObj.FrameRate = 1;
+open(writerObj);
 
 %%%%% RUN PARTICLE FILTER SIMULATION 
 disp('running particle filter')
@@ -168,40 +174,41 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
     [range, range_t] = get_range_measurement(measurement, t, p.delta_t/2);
 
     % if we have a range measurement
-    if ~isempty(range)
+    if ~isempty(range) && ~(mean(state.z) < 600 && min(state.mode) >= 2)
         % measurement update
         disp("updating with range measurement")
+        
         [particle_range, state.weight, ship_x, ship_y] = measurement_update(state, p, ship, range, t);
 
         % Pause and visualize
-        %figure(f1)
-        %plot3(state.x,state.y,state.z,'r.'), hold on
+        figure(f1)
+        plot3(state.x,state.y,state.z,'r.'), hold on
 
         % resample particles
         disp("resampling particles")
         state = resample_particles(state);
 
         % Pause and visualize 
-        %plot3(state.x,state.y,state.z,'k.'), hold on
+        plot3(state.x,state.y,state.z,'k.'), hold on
 
         % Add a marker at the position of the ship
         ship_z = 0;
-        %scatter3(ship_x, ship_y, ship_z, 'Marker', 'o', 'MarkerFaceColor', 'red', 'MarkerEdgeColor', 'none', 'SizeData', 200);
+        scatter3(ship_x, ship_y, ship_z, 'Marker', 'o', 'MarkerFaceColor', 'red', 'MarkerEdgeColor', 'none', 'SizeData', 200);
 
         % Plot sphere using plot3
-        %[x, y, z] = range_sphere(range, ship_x, ship_y);
-        %surf(x,y,z,'FaceAlpha',0.3, 'EdgeAlpha', 0.3); % Set the FaceAlpha property to 0.5 for semi-opacity
-        %colormap(gray); % Set the colormap to grayscale
-        %axis equal;
-        %set(gca, 'ZDir', 'reverse');
-        %hold off
-        %title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),')');
-        %title(title_str,'fontsize',8) 
-        %pause(1)
+        [x, y, z] = range_sphere(range, ship_x, ship_y);
+        surf(x,y,z,'FaceAlpha',0.3, 'EdgeAlpha', 0.3); % Set the FaceAlpha property to 0.5 for semi-opacity
+        colormap(gray); % Set the colormap to grayscale
+        axis equal;
+        set(gca, 'ZDir', 'reverse');
+        hold off
+        title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),',u=',num2str(mean(state.u)),',v=',num2str(mean(state.v)),',w=',num2str(mean(state.w)),')');
+        title(title_str,'fontsize',8) 
+        pause(1)
     
         % write the figure to a frame, save into the video
-        %F = getframe(f1);
-        %writeVideo(writerObj,F);
+        F = getframe(f1);
+        writeVideo(writerObj,F);
         
     end
 
@@ -215,9 +222,9 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
 %     master_particle.w(t) = mean(state.w);
 
 
-    % kill sim for any reason
-    if state.finished_particles == p.num_particles
-        disp('all particles at surface!')
+    % kill sim if 95% of particles are finished
+    if state.finished_particles > p.num_particles*0.95 
+        disp('all particles at surface! or particle depth < 600 meters!')
         break
     end
 
@@ -225,24 +232,22 @@ end
 
 disp('particle filter has ended! run next section for plot and to save the video.')
 
-total_elapsed_time = toc(total_timer);
-
 %%
 %%%%% OUTPUTS
 clc, close all
 
 % add path variables to access file + functions
 if ispc() % windows
-    addpath("gsw_matlab_v3_06_16\","\latlonutm\")
+    addpath("gsw_matlab_v3_06_16\","latlonutm\")
 else      % mac, ubuntu
-    addpath("gsw_matlab_v3_06_16/","/latlonutm/")
+    addpath("gsw_matlab_v3_06_16/","latlonutm/")
 end
 
 disp('simulation ended!')
 final_particle_pose_x = mean(state.x);
 final_particle_pose_y = mean(state.y);
 final_particle_pose_z = mean(state.z);
-fprintf('The mean position is x = %.2f, y = %.2f, z = %.2f\n.',final_particle_pose_x, final_particle_pose_y, final_particle_pose_z)
+fprintf('The estimated position is x = %.2f, y = %.2f, z = %.2f\n.',final_particle_pose_x, final_particle_pose_y, final_particle_pose_z)
 
 
 %%%%% Ground truth
@@ -260,16 +265,21 @@ plot(final_particle_pose_x, final_particle_pose_y, 'y^')
 plot(median(state.x), median(state.y), 'g*')
 legend('Point Cloud', 'True Position', 'Mean Position', 'Median Position')
 axis equal
+xlabel('x'),ylabel('y')
 
 
 %%%%% implement density solution here
 
 % generate meshgrid
-grid_size = 20;
+grid_size = 50;
 n = length(state.x);
 
-x_edges = linspace(min(state.x),max(state.x),grid_size);
-y_edges = linspace(min(state.y),max(state.y),grid_size);
+%x_edges = linspace(min(state.x),max(state.x),grid_size);
+%y_edges = linspace(min(state.y),max(state.y),grid_size);
+%[X, Y] = meshgrid(x_edges, y_edges);
+
+y_edges = linspace(min(state.x),max(state.x),grid_size);
+x_edges = linspace(min(state.y),max(state.y),grid_size);
 [X, Y] = meshgrid(x_edges, y_edges);
 
 % Count the number of points in each meshgrid cell
@@ -291,7 +301,7 @@ prob_map.Z = counts/n;  % 'probability' in z
 
 % surface plot
 figure(2)
-surf(prob_map.X, prob_map.Y, prob_map.Z)
+surf(prob_map.Y, prob_map.X, prob_map.Z)
 xlabel('x'),ylabel('y'),zlabel('probability')
 
 % heat map
@@ -306,8 +316,10 @@ cb.Label.String = 'probability';
 [prob_map.max_z, max_idx] = max(prob_map.Z(:));
 [max_row, max_col] = ind2sub(size(counts), max_idx);
 
-prob_map.max_y = prob_map.Y(max_row,1);
-prob_map.max_x = prob_map.X(1,max_col);
+%prob_map.max_y = prob_map.Y(max_row,1);
+%prob_map.max_x = prob_map.X(1,max_col);
+prob_map.max_y = prob_map.Y(max_col,1);
+prob_map.max_x = prob_map.X(1,max_row);
 
 fprintf('Max x is %0.3f, max y is %0.3f\n', prob_map.max_x, prob_map.max_y)
 
@@ -319,27 +331,4 @@ plot(prob_map.max_x, prob_map.max_y,'ws')
 %%%%%
 
 % close video
-%close(writerObj)
-
-
-% write to a csv
-csv_name = strcat(string(datetime),'.csv');
-fileID = fopen(csv_name, 'w');
-try 
-    fprintf(fileID, 'topside,%s\n',fn_topside)
-    fprintf(fileID, 'truth,%f,%f\n',local_x,local_y);
-    fprintf(fileID, 'mean,%f,%f\n',mean(state.x),mean(state.y));
-    fprintf(fileID, 'median,%f,%f\n',median(state.x),median(state.y));
-    fprintf(fileID, 'density,%f,%f\n',prob_map.max_x,prob_map.max_y);
-    fprintf(fileID, 'time,%f\n',total_elapsed_time);
-
-    fclose(fileID);
-    disp('wrote data to csv')
-
-catch
-    fclose(fileID);
-    disp('error saving csv data')
-
-end
-
-clearvars
+close(writerObj)
