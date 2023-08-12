@@ -3,7 +3,7 @@
 MATLAB_EXECUTABLE="/usr/local/bin/matlab"
 
 # List of Matlab files 
-matlab_files=("dive1.m" "dive2.m" "dive3.m" "dive4.m" "dive5.m")
+matlab_files=("d1.m" "d2.m" "d3.m")
 
 # Number of times to run each Matlab file
 num_runs=10

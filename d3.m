@@ -22,8 +22,8 @@ clc, clearvars, close all
 
 
 % Load & plot lander data
-fn_topside = '20180921_110812.mat'; % topside .mat filename (smaller file)
-fn_lander = '20180921_110738.mat'; % lander .mat filename (bigger file)
+fn_topside = '20180921_223525.mat'; % topside .mat filename (smaller file)
+fn_lander = '20180921_223442.mat'; % lander .mat filename (bigger file)
 [ship, measurement, lander, ssp] = get_lander_data(fn_topside, fn_lander);
 
 lander_on_bottom_start_idx = find(lander.depth > max(lander.depth)-5,1);
@@ -39,7 +39,7 @@ ocean_depth = 8400;               % approximate ocean depth known before deploym
 ocean_depth_percent_error = 0.01;       % confidence in bottom estimate (1%)
 num_particles = 1e5;            % num of particles to use in estimation
 burnwire_time = 60*5;           % seconds it takes for burnwire to corrode
-total_bottom_time = 245*60 + burnwire_time;     % seconds lander is programmed to sit on the bottom
+total_bottom_time = 380*60 + burnwire_time;     % seconds lander is programmed to sit on the bottom
 use_range_correction = 0;       % Set to 1 to use range correction with ssp
 use_lander_depth = 0;           % Set to 1 to use lander depth post processed solution
 use_lost_lander = [0 1000];     % Set to 1 if running lost lander problem and change radius (m)
@@ -134,18 +134,19 @@ disp('observe initial cloud. run next code section to start particle filter.')
 
 %% Main pf loop 
 disp('...starting particle filter...')
+total_runtimer = tic;
 
 % Get the screen size
-screen_size = get(groot, 'ScreenSize');
+%screen_size = get(groot, 'ScreenSize');
 
 % Set the figure window size to the screen size
-set(gcf, 'Position', screen_size);
+%set(gcf, 'Position', screen_size);
 
 %%%% RECORD FRAMES FOR A VIDEO
-video_name = strcat(vid_folder,datestr(datetime('now'), 'yyyymmddHHMMSS'));
-writerObj = VideoWriter(video_name,'Motion JPEG AVI');
-writerObj.FrameRate = 1;
-open(writerObj);
+%video_name = strcat(vid_folder,datestr(datetime('now'), 'yyyymmddHHMMSS'));
+%writerObj = VideoWriter(video_name,'Motion JPEG AVI');
+%writerObj.FrameRate = 1;
+%open(writerObj);
 
 %%%%% RUN PARTICLE FILTER SIMULATION 
 disp('running particle filter')
@@ -181,34 +182,34 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
         [particle_range, state.weight, ship_x, ship_y] = measurement_update(state, p, ship, range, t);
 
         % Pause and visualize
-        figure(f1)
-        plot3(state.x,state.y,state.z,'r.'), hold on
+        %figure(f1)
+        %plot3(state.x,state.y,state.z,'r.'), hold on
 
         % resample particles
         disp("resampling particles")
-        state = resample_particles(state);
+        state = resample_particles(state,p);
 
         % Pause and visualize 
-        plot3(state.x,state.y,state.z,'k.'), hold on
+        %plot3(state.x,state.y,state.z,'k.')
 
         % Add a marker at the position of the ship
-        ship_z = 0;
-        scatter3(ship_x, ship_y, ship_z, 'Marker', 'o', 'MarkerFaceColor', 'red', 'MarkerEdgeColor', 'none', 'SizeData', 200);
+        %ship_z = 0;
+        %scatter3(ship_x, ship_y, ship_z, 'Marker', 'o', 'MarkerFaceColor', 'red', 'MarkerEdgeColor', 'none', 'SizeData', 200);
 
         % Plot sphere using plot3
-        [x, y, z] = range_sphere(range, ship_x, ship_y);
-        surf(x,y,z,'FaceAlpha',0.3, 'EdgeAlpha', 0.3); % Set the FaceAlpha property to 0.5 for semi-opacity
-        colormap(gray); % Set the colormap to grayscale
-        axis equal;
-        set(gca, 'ZDir', 'reverse');
-        hold off
-        title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),',u=',num2str(mean(state.u)),',v=',num2str(mean(state.v)),',w=',num2str(mean(state.w)),')');
-        title(title_str,'fontsize',8) 
-        pause(1)
+        %[x, y, z] = range_sphere(range, ship_x, ship_y);
+        %surf(x,y,z,'FaceAlpha',0.3, 'EdgeAlpha', 0.3); % Set the FaceAlpha property to 0.5 for semi-opacity
+        %colormap(gray); % Set the colormap to grayscale
+        %axis equal;
+        %set(gca, 'ZDir', 'reverse');
+        %hold off
+        %title_str = strcat(num2str(p.num_particles),'p, range=',num2str(range),', avgparticle=(x=',num2str(mean(state.x)),',y=',num2str(mean(state.y)),',z=',num2str(mean(state.z)),',u=',num2str(mean(state.u)),',v=',num2str(mean(state.v)),',w=',num2str(mean(state.w)),')');
+        %title(title_str,'fontsize',8) 
+        %pause(1)
     
         % write the figure to a frame, save into the video
-        F = getframe(f1);
-        writeVideo(writerObj,F);
+        %F = getframe(f1);
+        %writeVideo(writerObj,F);
         
     end
 
@@ -231,6 +232,7 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
 end
 
 disp('particle filter has ended! run next section for plot and to save the video.')
+total_elapsed_time = toc(total_runtimer);
 
 %%
 %%%%% OUTPUTS
@@ -247,88 +249,51 @@ disp('simulation ended!')
 final_particle_pose_x = mean(state.x);
 final_particle_pose_y = mean(state.y);
 final_particle_pose_z = mean(state.z);
-fprintf('The estimated position is x = %.2f, y = %.2f, z = %.2f\n.',final_particle_pose_x, final_particle_pose_y, final_particle_pose_z)
+fprintf('The MEAN estimated position is x = %.2f, y = %.2f, z = %.2f\n.',final_particle_pose_x, final_particle_pose_y, final_particle_pose_z)
 
+%open(writerObj);
 
 %%%%% Ground truth
 csv_fn = 'lander_iridium_sept2018.csv';
 [local_x, local_y, surface_t] = ground_truth(csv_fn, p);
 distance = sqrt((local_x - final_particle_pose_x)^2 + (local_y - final_particle_pose_y)^2);
-fprintf(' The distance between the ground truth and estimate is %.2f meters\n',distance)
+fprintf(' The distance between the ground truth and mean estimate is %.2f meters\n',distance)
 
 
-% Plot final point cloud top down view
-figure(1)
-scatter(state.x,state.y,'b.'); hold on
-plot(local_x, local_y, 'ro'); hold on
-plot(final_particle_pose_x, final_particle_pose_y, 'y^')
-plot(median(state.x), median(state.y), 'g*')
-legend('Point Cloud', 'True Position', 'Mean Position', 'Median Position')
-axis equal
-xlabel('x'),ylabel('y')
+
+%%%%% Calculate density solution
+density_solution = get_probdensity_solution(state);
 
 
-%%%%% implement density solution here
-
-% generate meshgrid
-grid_size = 50;
-n = length(state.x);
-
-%x_edges = linspace(min(state.x),max(state.x),grid_size);
-%y_edges = linspace(min(state.y),max(state.y),grid_size);
-%[X, Y] = meshgrid(x_edges, y_edges);
-
-y_edges = linspace(min(state.x),max(state.x),grid_size);
-x_edges = linspace(min(state.y),max(state.y),grid_size);
-[X, Y] = meshgrid(x_edges, y_edges);
-
-% Count the number of points in each meshgrid cell
-counts = histcounts2(state.x, state.y, x_edges, y_edges);
-        % gives us values between our edges
-
-% create new probability map with shifted coords (x,y,counts)
-X_diff = abs(X(1,1) - X(1,2))/2;  % get shift
-X_new = X + X_diff;               % shift X
-X_new = X_new(1:end-1,1:end-1);   % fix size
-prob_map.X = X_new;
-
-Y_diff = abs(Y(1,1) - Y(2,1))/2;  % get shift
-Y_new = Y + Y_diff;               % shift Y
-Y_new = Y_new(1:end-1,1:end-1);   % fix size
-prob_map.Y = Y_new;
-
-prob_map.Z = counts/n;  % 'probability' in z
-
-% surface plot
-figure(2)
-surf(prob_map.Y, prob_map.X, prob_map.Z)
-xlabel('x'),ylabel('y'),zlabel('probability')
-
-% heat map
-figure(3)
-imagesc(prob_map.X(1,:), prob_map.Y(:,1)', prob_map.Z)
-set(gca, 'YDir', 'normal');
-xlabel('x'),ylabel('y')
-cb = colorbar;
-cb.Label.String = 'probability';
-
-% output the peak
-[prob_map.max_z, max_idx] = max(prob_map.Z(:));
-[max_row, max_col] = ind2sub(size(counts), max_idx);
-
-%prob_map.max_y = prob_map.Y(max_row,1);
-%prob_map.max_x = prob_map.X(1,max_col);
-prob_map.max_y = prob_map.Y(max_col,1);
-prob_map.max_x = prob_map.X(1,max_row);
-
-fprintf('Max x is %0.3f, max y is %0.3f\n', prob_map.max_x, prob_map.max_y)
+%%%%% Final Plot of all Solutions
+figure()
+plot(state.x,         state.y,          'b.'), hold on
+plot(local_x,         local_y,          'ro'),
+plot(mean(state.x),   mean(state.y),    'm^'),
+plot(median(state.x), median(state.y),  'g*'),
+plot(density_solution.x, density_solution.y, 'ws')
+xlabel('x'), ylabel('y'), axis equal
+legend('particles','truth','mean','median','density')
+title('Final Particle Cloud and DAP Estimates')
 
 
-figure(1)
-plot(prob_map.max_x, prob_map.max_y,'ws')
+
+%%%%% Output a CSV file
+filename = strcat(datestr(datetime),".csv");
+fileID = fopen(filename, 'w');
+
+fprintf(fileID,"%s\n",fn_lander);
+fprintf(fileID, "truth, %f, %f\n", local_x, local_y);
+fprintf(fileID, "mean, %f, %f\n", mean(state.x), mean(state.y));
+fprintf(fileID, "median, %f, %f\n", median(state.x), median(state.y));
+fprintf(fileID, "density, %f, %f\n", density_solution.x, density_solution.y);
+fprintf(fileID, "time, %f", total_elapsed_time);
+
+fclose(fileID);
 
 
-%%%%%
+%%%%% Save the 'state' variable in case it's needed later
+save(strcat(datestr(datetime),".mat"), 'state')
 
 % close video
-close(writerObj)
+%close(writerObj)

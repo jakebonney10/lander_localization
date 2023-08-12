@@ -44,7 +44,7 @@ state.bottom_time = state.bottom_time(indices);
  % time, band-aid fix for now
  % generate new z_transition values, as previous ones have no significance
 idx_descending = state.mode == 0;
-state.z_transition(idx_descending) = normrnd(p.ocean_depth,p.ocean_depth_sigma,length(idx_descending),1);
+state.z_transition(idx_descending) = normrnd(p.ocean_depth,p.ocean_depth_sigma,sum(idx_descending),1);
 
 
 % reset particle weights to uniform values
