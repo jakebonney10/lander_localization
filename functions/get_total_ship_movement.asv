@@ -1,0 +1,21 @@
+function totalMovement = get_total_ship_movement(shipData, p, surface_time)
+    % Extract dive-specific ship location data
+    diveIndices = shipData.timestamp >= p & shipData.timestamp <= surface_time;
+    
+    % Convert lat/lon to UTM
+    utm_zone = 19; % TODO: Dont hardcode this
+    [ship_x, ship_y] = ll2utm(ship.lat, ship.lon, utm_zone);
+    [origin_x, origin_y] = ll2utm(p.origin_lat, p.origin_lon, utm_zone);
+    local_x = ship_x - origin_x;
+    local_y = ship_y - origin_y;
+    
+    diveX = shipData.lat(diveIndices);
+    diveY = shipData.lon(diveIndices);
+    
+    % Calculate distance moved during the dive
+    distances = sqrt(diff(diveX).^2 + diff(diveY).^2);
+    
+    % Sum up the distances to get total movement
+    totalMovement = sum(distances);
+end
+

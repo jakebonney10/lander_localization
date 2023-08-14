@@ -1,6 +1,6 @@
 % lander_pf script
 % Bonney and Parisi
-clc, clearvars, close all
+%clc, clearvars, close all
 
 % GOAL: Initialize particles for particle filter localization and perform 
 % motion update step for each particle.
@@ -121,7 +121,7 @@ state.bottom_time = initial.bottom_time;
 state.total_bottom_time = initial.total_bottom_time;
 state.finished_particles = 0;
 
-% Plot initial particle state
+%% Plot initial particle state
 f1 = figure(1);
 scatter3(state.x, state.y, state.z,'r.')
 set(gca, 'ZDir', 'reverse');
@@ -253,15 +253,14 @@ fprintf('The MEAN estimated position is x = %.2f, y = %.2f, z = %.2f\n.',final_p
 
 %open(writerObj);
 
-%%%%% Ground truth
+%% Ground truth
 csv_fn = 'lander_iridium_sept2018.csv';
 [local_x, local_y, surface_t] = ground_truth(csv_fn, p);
 distance = sqrt((local_x - final_particle_pose_x)^2 + (local_y - final_particle_pose_y)^2);
 fprintf(' The distance between the ground truth and mean estimate is %.2f meters\n',distance)
 
 
-
-%%%%% Calculate density solution
+%% Calculate density solution
 density_solution = get_probdensity_solution(state);
 
 
@@ -279,7 +278,8 @@ title('Final Particle Cloud and DAP Estimates')
 
 
 %%%%% Output a CSV file
-filename = strcat(datestr(datetime),".csv");
+current_datetime = datetime;
+filename = strcat(datestr(current_datetime, 'yyyy-mm-dd_HH-MM-SS'), ".csv"); % Format date and time for a valid filename
 fileID = fopen(filename, 'w');
 
 fprintf(fileID,"%s\n",fn_lander);
@@ -297,3 +297,7 @@ save(strcat(datestr(datetime),".mat"), 'state')
 
 % close video
 %close(writerObj)
+
+%% Calculate total ship movement
+ 
+[totalMovement, totalXMovement, totalYmovement] = get_total_ship_movement(ship, p.t_start, posixtime(surface_t), p.origin_lat, p.origin_lon)

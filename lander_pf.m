@@ -40,8 +40,8 @@ ocean_depth_percent_error = 0.01;       % confidence in bottom estimate (1%)
 num_particles = 1e5;            % num of particles to use in estimation
 burnwire_time = 60*5;           % seconds it takes for burnwire to corrode
 total_bottom_time = 3600*(1/12) + burnwire_time;     % seconds lander is programmed to sit on the bottom
-use_range_correction = 0;       % Set to 1 to use range correction with ssp
-use_lander_depth = 0;           % Set to 1 to use lander depth post processed solution
+use_range_correction = 1;       % Set to 1 to use range correction with ssp
+use_lander_depth = 1;           % Set to 1 to use lander depth post processed solution
 use_lost_lander = [0 1000];     % Set to 1 if running lost lander problem and change radius (m)
 
 
@@ -72,8 +72,7 @@ p.num_particles = num_particles;
 % Uncertainties
 p.descent_std_dev = 0.002; % (m/s)
 p.position_std_dev = 15; % (m)
-p.velocity_std_dev_surface = 0.005; % (m/s)
-p.velocity_std_dev = p.velocity_std_dev_surface; % (m/s)
+p.velocity_std_dev = 0.005; % (m/s)
 p.start_depth_sigma = 50; % (m)
 p.on_bottom_position_sigma = 0.25; % (m)
 p.total_bottom_time_sigma = 60*5; % variation in minutes used for probability of transition time bottom 
@@ -162,7 +161,7 @@ for t=p.t_start:p.delta_t:p.t_start + p.t_max
 
     % Lander depth post processed solution
     if use_lander_depth == 1
-        [state.z] = get_lander_measurement(lander, p, t, p.delta_t/4);
+        [state.z] = get_lander_measurement(lander, p, t, p.delta_t/4)
         state.z_transition = ones(p.num_particles, 1) * max(lander.depth) - 0.1;
         if state.z >= state.z_transition
             state.mode = ones(p.num_particles, 1) * 1; % on bottom
@@ -253,15 +252,14 @@ fprintf('The MEAN estimated position is x = %.2f, y = %.2f, z = %.2f\n.',final_p
 
 %open(writerObj);
 
-%%%%% Ground truth
+%% Ground truth
 csv_fn = 'lander_iridium_sept2018.csv';
 [local_x, local_y, surface_t] = ground_truth(csv_fn, p);
 distance = sqrt((local_x - final_particle_pose_x)^2 + (local_y - final_particle_pose_y)^2);
 fprintf(' The distance between the ground truth and mean estimate is %.2f meters\n',distance)
 
 
-
-%%%%% Calculate density solution
+%% Calculate density solution
 density_solution = get_probdensity_solution(state);
 
 
@@ -279,7 +277,8 @@ title('Final Particle Cloud and DAP Estimates')
 
 
 %%%%% Output a CSV file
-filename = strcat(datestr(datetime),".csv");
+current_datetime = datetime;
+filename = strcat(datestr(current_datetime, 'yyyy-mm-dd_HH-MM-SS'), ".csv"); % Format date and time for a valid filename
 fileID = fopen(filename, 'w');
 
 fprintf(fileID,"%s\n",fn_lander);
@@ -297,3 +296,7 @@ save(strcat(datestr(datetime),".mat"), 'state')
 
 % close video
 %close(writerObj)
+
+%% Calculate total ship movement
+
+totalMovement = get_total_ship_movement(ship, p.t_start, posixtime(surface_t), p.origin_lat, p.origin_lon)
