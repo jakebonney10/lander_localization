@@ -1,5 +1,5 @@
-function state = resample_particles(state)
-% stochastic universal resampling (SUR) for particles based off their weights
+function state = resample_particles(state,p)
+% stostate.z_transition = state.z_transition(indices);chastic universal resampling (SUR) for particles based off their weights
 
 % Start the timer
 tic
@@ -32,11 +32,20 @@ state.z = state.z(indices);
 state.u = state.u(indices);
 state.v = state.v(indices);
 state.w = state.w(indices);
-state.z_transition = state.z_transition(indices);
+%state.z_transition = state.z_transition(indices);
+
 
 % save particle mode and bottom time
 state.mode = state.mode(indices);
 state.bottom_time = state.bottom_time(indices);
+
+% if particles are descending, then regenerate their z_depth_transition
+ % this is definitely inefficient to keep generating new depths everyt
+ % time, band-aid fix for now
+ % generate new z_transition values, as previous ones have no significance
+idx_descending = state.mode == 0;
+state.z_transition(idx_descending) = normrnd(p.ocean_depth,p.ocean_depth_sigma,sum(idx_descending),1);
+
 
 % reset particle weights to uniform values
 state.weight = ones(length(state.weight), 1) / length(state.weight); 
